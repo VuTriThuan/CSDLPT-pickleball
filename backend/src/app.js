@@ -3,12 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/database");
 const datSanRoutes = require("./routes/datSan");
+const { authenticateDemoUser } = require("./middleware/auth");
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(authenticateDemoUser);
 
 // Connect DB
 connectDB();

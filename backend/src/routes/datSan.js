@@ -8,6 +8,110 @@ const {
 } = require("../services/datSanService");
 const LichHen = require("../models/LichHen");
 const ThanhToan = require("../models/ThanhToan");
+const San = require("../models/San");
+const KhachHang = require("../models/KhachHang");
+const { PERMISSIONS } = require("../constants/roles");
+const { requireAuth, requirePermission } = require("../middleware/auth");
+const {
+  assertCanManageSan,
+  assertCanManageKhachHang,
+} = require("../services/phanQuyenService");
+
+const sendError = (res, err, defaultStatus = 500) =>
+  res.status(err.statusCode || defaultStatus).json({
+    success: false,
+    message: err.message,
+  });
+
+const pickDefined = (source, fields) =>
+  fields.reduce((result, field) => {
+    if (source[field] !== undefined) result[field] = source[field];
+    return result;
+  }, {});
+
+const cleanPayload = (payload) =>
+  Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== "" && value != null),
+  );
+
+const normalizeSanPayload = (body) =>
+  cleanPayload({
+    MaSan: body.MaSan || body.maSan,
+    TenSan: body.TenSan || body.tenSan,
+    GiaTheoGio: body.GiaTheoGio ?? body.gia,
+    TrangThai: body.TrangThai || body.trangThai,
+    MaChiNhanh: body.MaChiNhanh || body.shard || body.maChiNhanh,
+  });
+
+const createSanForUser = async (req) => {
+  const payload = normalizeSanPayload(req.body);
+  assertCanManageSan(req.user, payload.MaChiNhanh);
+  return San.create(payload);
+};
+
+const updateSanForUser = async (req) => {
+  const san = await San.findOne({ MaSan: req.params.maSan });
+  if (!san) {
+    const err = new Error("Không tìm thấy sân");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const payload = normalizeSanPayload(req.body);
+  assertCanManageSan(req.user, san.MaChiNhanh);
+  if (payload.MaChiNhanh && payload.MaChiNhanh !== san.MaChiNhanh) {
+    assertCanManageSan(req.user, payload.MaChiNhanh);
+  }
+
+  return San.findOneAndUpdate({ MaSan: req.params.maSan }, payload, {
+    new: true,
+    runValidators: true,
+  });
+};
+
+const deleteSanForUser = async (req) => {
+  const san = await San.findOne({ MaSan: req.params.maSan });
+  if (!san) {
+    const err = new Error("Không tìm thấy sân");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  assertCanManageSan(req.user, san.MaChiNhanh);
+  await San.deleteOne({ MaSan: req.params.maSan });
+};
+
+/**
+ * Trigger phan quyen demo:
+ * - Quan ly chi nhanh thao tac san trong chi nhanh cua minh:
+ *   x-user-role: quan_ly_chi_nhanh
+ *   x-branch-id: CN001
+ * - Quan ly he thong thao tac khach hang/toan he thong:
+ *   x-user-role: quan_ly_he_thong
+ */
+
+router.get("/", async (_req, res) => {
+  try {
+    const san = await San.find().sort({ MaSan: 1 });
+    res.json({ success: true, data: san });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.post(
+  "/",
+  requireAuth,
+  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  async (req, res) => {
+    try {
+      const san = await createSanForUser(req);
+      res.status(201).json({ success: true, data: san });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
 
 /**
  * GET /api/san/trong
@@ -130,5 +234,171 @@ router.get("/thanh-toan/:maThanhToan", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// 2. Them, sua, xoa san
+router.post(
+  "/quan-ly/san",
+  requireAuth,
+  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  async (req, res) => {
+    try {
+      assertCanManageSan(req.user, req.body.MaChiNhanh);
+      const san = await San.create(req.body);
+      res.status(201).json({ success: true, data: san });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.put(
+  "/quan-ly/san/:maSan",
+  requireAuth,
+  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  async (req, res) => {
+    try {
+      const san = await San.findOne({ MaSan: req.params.maSan });
+      if (!san) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy sân" });
+      }
+
+      assertCanManageSan(req.user, san.MaChiNhanh);
+      if (req.body.MaChiNhanh && req.body.MaChiNhanh !== san.MaChiNhanh) {
+        assertCanManageSan(req.user, req.body.MaChiNhanh);
+      }
+
+      const updated = await San.findOneAndUpdate(
+        { MaSan: req.params.maSan },
+        pickDefined(req.body, [
+          "TenSan",
+          "GiaTheoGio",
+          "TrangThai",
+          "MaChiNhanh",
+        ]),
+        { new: true, runValidators: true },
+      );
+
+      res.json({ success: true, data: updated });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.delete(
+  "/quan-ly/san/:maSan",
+  requireAuth,
+  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  async (req, res) => {
+    try {
+      const san = await San.findOne({ MaSan: req.params.maSan });
+      if (!san) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy sân" });
+      }
+
+      assertCanManageSan(req.user, san.MaChiNhanh);
+      await San.deleteOne({ MaSan: req.params.maSan });
+      res.json({ success: true, message: "Đã xóa sân" });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+// 3. Them, sua, xoa thong tin khach hang
+router.post(
+  "/quan-ly/khach-hang",
+  requireAuth,
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  async (req, res) => {
+    try {
+      assertCanManageKhachHang(req.user);
+      const khachHang = await KhachHang.create(req.body);
+      res.status(201).json({ success: true, data: khachHang });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.put(
+  "/quan-ly/khach-hang/:maKhachHang",
+  requireAuth,
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  async (req, res) => {
+    try {
+      assertCanManageKhachHang(req.user);
+      const updated = await KhachHang.findOneAndUpdate(
+        { MaKhachHang: req.params.maKhachHang },
+        pickDefined(req.body, ["HoTen", "SoDienThoai", "Email", "NgayDangKy"]),
+        { new: true, runValidators: true },
+      );
+
+      if (!updated) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy khách hàng" });
+      }
+
+      res.json({ success: true, data: updated });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.delete(
+  "/quan-ly/khach-hang/:maKhachHang",
+  requireAuth,
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  async (req, res) => {
+    try {
+      assertCanManageKhachHang(req.user);
+      const result = await KhachHang.deleteOne({
+        MaKhachHang: req.params.maKhachHang,
+      });
+      if (!result.deletedCount) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy khách hàng" });
+      }
+      res.json({ success: true, message: "Đã xóa khách hàng" });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.put(
+  "/:maSan",
+  requireAuth,
+  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  async (req, res) => {
+    try {
+      const updated = await updateSanForUser(req);
+      res.json({ success: true, data: updated });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.delete(
+  "/:maSan",
+  requireAuth,
+  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  async (req, res) => {
+    try {
+      await deleteSanForUser(req);
+      res.json({ success: true, message: "Đã xóa sân" });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
 
 module.exports = router;

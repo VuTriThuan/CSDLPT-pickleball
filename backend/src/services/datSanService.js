@@ -166,40 +166,47 @@ const datSanVaThanhToan = async ({
  * Hủy lịch hẹn + hoàn tiền (transaction)
  */
 const huyLichHenVaHoanTien = async (maLichHen) => {
+  const execute = async (session) => {
+    const lichHen = await withSession(
+      LichHen.findOne({ MaLichHen: maLichHen }),
+      session,
+    );
+    if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
+    if (lichHen.TrangThai === "da_huy") {
+      throw new Error("Lịch hẹn đã được hủy trước đó");
+    }
+    if (lichHen.TrangThai === "hoan_thanh") {
+      throw new Error("Không thể hủy lịch hẹn đã hoàn thành");
+    }
+
+    await withSession(
+      LichHen.updateOne({ MaLichHen: maLichHen }, { TrangThai: "da_huy" }),
+      session,
+    );
+
+    await withSession(
+      ThanhToan.updateOne(
+        { MaLichHen: maLichHen, TrangThai: "thanh_cong" },
+        { TrangThai: "hoan_tien" },
+      ),
+      session,
+    );
+
+    return { success: true, message: "Hủy lịch hẹn và hoàn tiền thành công" };
+  };
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const lichHen = await LichHen.findOne({ MaLichHen: maLichHen }).session(
-      session,
-    );
-    if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
-    if (lichHen.TrangThai === "da_huy")
-      throw new Error("Lịch hẹn đã được hủy trước đó");
-    if (lichHen.TrangThai === "hoan_thanh")
-      throw new Error("Không thể hủy lịch hẹn đã hoàn thành");
-
-    // Cập nhật trạng thái lịch hẹn
-    await LichHen.updateOne(
-      { MaLichHen: maLichHen },
-      { TrangThai: "da_huy" },
-      { session },
-    );
-
-    // Cập nhật thanh toán -> hoàn tiền
-    await ThanhToan.updateOne(
-      { MaLichHen: maLichHen, TrangThai: "thanh_cong" },
-      { TrangThai: "hoan_tien" },
-      { session },
-    );
-
+    const result = await execute(session);
     await session.commitTransaction();
     session.endSession();
-
-    return { success: true, message: "Hủy lịch hẹn và hoàn tiền thành công" };
+    return result;
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) await session.abortTransaction();
     session.endSession();
+    if (isTransactionUnsupportedError(error)) return execute();
     throw error;
   }
 };

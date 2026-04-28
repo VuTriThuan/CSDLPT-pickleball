@@ -19,7 +19,7 @@ export default function LichSuDatSan() {
       const res = await getLichSuDatSan(maKH.trim());
       setData(res.data || []);
       if (!res.data?.length)
-        setToast({ msg: "Không có lịch hẹn nào", type: "error" });
+        setToast({ msg: "Không có lịch đặt sân cho khách hàng này", type: "error" });
     } catch (err) {
       setToast({ msg: err.message, type: "error" });
     } finally {
