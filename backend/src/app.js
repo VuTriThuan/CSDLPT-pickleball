@@ -1,17 +1,25 @@
+require("dotenv").config();
 const express = require("express");
-const connectDB = require("./config/db");
 const cors = require("cors");
+const connectDB = require("./config/database");
+const datSanRoutes = require("./routes/datSan");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Connect DB
 connectDB();
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
+// Routes
+app.use("/api/san", datSanRoutes);
 
-app.listen(3005, () => {
-  console.log("Server chạy tại http://localhost:3005");
-});
+// Health check
+app.get("/health", (req, res) => res.json({ status: "ok", time: new Date() }));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+module.exports = app;
