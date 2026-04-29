@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { requireAuth } = require("../middleware/auth");
 const {
   datSanVaThanhToan,
   huyLichHenVaHoanTien,
@@ -8,124 +9,131 @@ const {
 } = require("../services/datSanService");
 const LichHen = require("../models/LichHen");
 const ThanhToan = require("../models/ThanhToan");
+const San = require("../models/San");
+const ChiNhanh = require("../models/ChiNhanh");
 
-/**
- * GET /api/san/trong
- * Lấy danh sách sân trống theo ngày giờ
- */
-router.get("/trong", async (req, res) => {
+// GET /api/chi-nhanh — danh sách chi nhánh (public, để hiển thị filter)
+router.get("/chi-nhanh", async (req, res) => {
   try {
-    const { ngayDat, gioBatDau, gioKetThuc } = req.query;
-    if (!ngayDat || !gioBatDau || !gioKetThuc) {
-      return res.status(400).json({
-        success: false,
-        message: "Thiếu tham số ngayDat, gioBatDau, gioKetThuc",
-      });
-    }
-    const sanTrong = await laySanTrong(ngayDat, gioBatDau, gioKetThuc);
-    res.json({ success: true, data: sanTrong });
+    const list = await ChiNhanh.find({ TrangThai: "hoat_dong" }).sort(
+      "MaChiNhanh",
+    );
+    res.json({ success: true, data: list });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-/**
- * POST /api/dat-san
- * Đặt sân và thanh toán (dùng transaction)
- * Body: { maSan, maKhachHang, ngayDat, gioBatDau, gioKetThuc, phuongThucThanhToan }
- */
-router.post("/dat-san", async (req, res) => {
+// GET /api/san/trong?maChiNhanh=&ngayDat=&gioBatDau=&gioKetThuc= (public)
+router.get("/trong", async (req, res) => {
   try {
-    const {
+    const { maChiNhanh, ngayDat, gioBatDau, gioKetThuc } = req.query;
+    if (!ngayDat || !gioBatDau || !gioKetThuc)
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu tham số ngayDat / gioBatDau / gioKetThuc",
+      });
+
+    const data = await laySanTrong(
+      maChiNhanh || null,
+      ngayDat,
       gioBatDau,
       gioKetThuc,
-      maKhachHang,
-      maSan,
-      ngayDat,
-      phuongThucThanhToan,
-    } = req.body;
-    if (!maSan || !maKhachHang || !ngayDat || !gioBatDau || !gioKetThuc) {
+    );
+    res.json({
+      success: true,
+      data,
+      shardNote: maChiNhanh
+        ? `Query trên shard của ${maChiNhanh}`
+        : "Scatter-gather query tất cả shard",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/dat-san  ← cần đăng nhập, maKhachHang lấy từ session
+router.post("/dat-san", requireAuth, async (req, res) => {
+  try {
+    const { maSan, ngayDat, gioBatDau, gioKetThuc, phuongThucThanhToan } =
+      req.body;
+    const maKhachHang = req.session.user.maKhachHang; // ← từ session, không nhập tay
+
+    if (!maSan || !ngayDat || !gioBatDau || !gioKetThuc)
       return res
         .status(400)
         .json({ success: false, message: "Thiếu thông tin đặt sân" });
-    }
+
     const result = await datSanVaThanhToan({
+      maSan,
+      maKhachHang,
+      ngayDat,
       gioBatDau,
       gioKetThuc,
-      maKhachHang,
-      maSan,
-      ngayDat,
       phuongThucThanhToan,
     });
     res.status(201).json(result);
   } catch (err) {
-    console.error("❌ ERROR:", err.message); // 👈 thêm dòng này
     res.status(400).json({ success: false, message: err.message });
   }
 });
 
-/**
- * POST /api/dat-san/huy/:maLichHen
- * Hủy lịch hẹn + hoàn tiền (transaction)
- */
-router.post("/dat-san/huy/:maLichHen", async (req, res) => {
+// POST /api/dat-san/huy/:maLichHen  ← cần đăng nhập
+router.post("/dat-san/huy/:maLichHen", requireAuth, async (req, res) => {
   try {
-    const result = await huyLichHenVaHoanTien(req.params.maLichHen);
+    const result = await huyLichHenVaHoanTien(
+      req.params.maLichHen,
+      req.session.user.maKhachHang,
+    );
     res.json(result);
   } catch (err) {
-    console.error("❌ ERROR:", err.message); // 👈 thêm dòng này
+    console.error(err);
     res.status(400).json({ success: false, message: err.message });
   }
 });
 
-/**
- * GET /api/lich-hen/khach-hang/:maKhachHang
- * Lịch sử đặt sân của khách hàng
- */
-router.get("/lich-hen/khach-hang/:maKhachHang", async (req, res) => {
+// GET /api/lich-hen/cua-toi  ← lịch của chính user đang đăng nhập
+router.get("/lich-hen/cua-toi", requireAuth, async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const result = await layLichSuDatSan(
-      req.params.maKhachHang,
-      Number(page),
-      Number(limit),
-    );
+    const maKhachHang =
+      req.session.user.maKhachHang || req.session.user.MaKhachHang;
+
+    const pageNum = parseInt(req.query.page) || 1;
+    const limitNum = parseInt(req.query.limit) || 10;
+
+    const result = await layLichSuDatSan(maKhachHang, pageNum, limitNum);
+
+    console.log("maKhachHang:", maKhachHang);
+    console.log("result:", result);
+
     res.json({ success: true, ...result });
   } catch (err) {
+    console.error("❌ LỖI LỊCH SỬ:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-/**
- * GET /api/lich-hen/:maLichHen
- * Chi tiết 1 lịch hẹn
- */
-router.get("/lich-hen/:maLichHen", async (req, res) => {
+// GET /api/lich-hen/:maLichHen
+router.get("/lich-hen/:maLichHen", requireAuth, async (req, res) => {
   try {
-    const lichHen = await LichHen.findOne({ MaLichHen: req.params.maLichHen });
-    if (!lichHen)
+    const lh = await LichHen.findOne({ MaLichHen: req.params.maLichHen });
+    if (!lh)
       return res
         .status(404)
-        .json({ success: false, message: "Không tìm thấy lịch hẹn" });
-    const thanhToan = await ThanhToan.findOne({ MaLichHen: lichHen.MaLichHen });
-    res.json({ success: true, data: { ...lichHen.toObject(), thanhToan } });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
+        .json({ success: false, message: "Không tìm thấy" });
+    if (
+      lh.MaKhachHang !== req.session.user.maKhachHang &&
+      req.session.user.role !== "admin"
+    )
+      return res
+        .status(403)
+        .json({ success: false, message: "Không có quyền xem" });
 
-/**
- * GET /api/thanh-toan/:maThanhToan
- * Chi tiết thanh toán
- */
-router.get("/thanh-toan/:maThanhToan", async (req, res) => {
-  try {
-    const tt = await ThanhToan.findOne({ MaThanhToan: req.params.maThanhToan });
-    if (!tt)
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy thanh toán" });
-    res.json({ success: true, data: tt });
+    const [thanhToan, san] = await Promise.all([
+      ThanhToan.findOne({ MaLichHen: lh.MaLichHen }),
+      San.findOne({ MaSan: lh.MaSan }),
+    ]);
+    res.json({ success: true, data: { ...lh.toObject(), thanhToan, san } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

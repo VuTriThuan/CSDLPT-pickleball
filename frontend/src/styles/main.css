@@ -508,3 +508,60 @@ body {
     padding: 20px 18px 24px;
   }
 }
+
+/* ── Auth container ───────────────────────────── */
+.auth-container {
+  width: 100%;
+  max-width: 420px;
+  animation: fadeIn 0.5s ease;
+}
+
+/* ── User bar ─────────────────────────────────── */
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 18px;
+  margin-bottom: 16px;
+}
+.user-bar__name {
+  font-weight: 700;
+  color: #e2e8f0;
+  font-size: 14px;
+  flex: 1;
+}
+.user-bar__code {
+  font-size: 12px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.user-bar__logout {
+  background: none;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+.user-bar__logout:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* ── Lich empty state ─────────────────────────── */
+.lich-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px 0;
+  font-size: 15px;
+}
