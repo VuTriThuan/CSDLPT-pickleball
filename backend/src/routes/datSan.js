@@ -82,12 +82,9 @@ const deleteSanForUser = async (req) => {
 };
 
 /**
- * Trigger phan quyen demo:
- * - Quan ly chi nhanh thao tac san trong chi nhanh cua minh:
- *   x-user-role: quan_ly_chi_nhanh
- *   x-branch-id: CN001
- * - Quan ly he thong thao tac khach hang/toan he thong:
- *   x-user-role: quan_ly_he_thong
+ * Rule phan quyen:
+ * - user: chi thao tac du lieu ca nhan
+ * - admin: quan ly san va khach hang
  */
 
 router.get("/", async (_req, res) => {
@@ -102,7 +99,7 @@ router.get("/", async (_req, res) => {
 router.post(
   "/",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  requirePermission(PERMISSIONS.SAN_MANAGE),
   async (req, res) => {
     try {
       const san = await createSanForUser(req);
@@ -119,14 +116,19 @@ router.post(
  */
 router.get("/trong", async (req, res) => {
   try {
-    const { ngayDat, gioBatDau, gioKetThuc } = req.query;
+    const { maChiNhanh, ngayDat, gioBatDau, gioKetThuc } = req.query;
     if (!ngayDat || !gioBatDau || !gioKetThuc) {
       return res.status(400).json({
         success: false,
         message: "Thiếu tham số ngayDat, gioBatDau, gioKetThuc",
       });
     }
-    const sanTrong = await laySanTrong(ngayDat, gioBatDau, gioKetThuc);
+    const sanTrong = await laySanTrong(
+      maChiNhanh,
+      ngayDat,
+      gioBatDau,
+      gioKetThuc,
+    );
     res.json({ success: true, data: sanTrong });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -138,16 +140,21 @@ router.get("/trong", async (req, res) => {
  * Đặt sân và thanh toán (dùng transaction)
  * Body: { maSan, maKhachHang, ngayDat, gioBatDau, gioKetThuc, phuongThucThanhToan }
  */
-router.post("/dat-san", async (req, res) => {
+router.post("/dat-san", requireAuth, async (req, res) => {
   try {
     const {
       gioBatDau,
       gioKetThuc,
-      maKhachHang,
       maSan,
       ngayDat,
       phuongThucThanhToan,
     } = req.body;
+    const maKhachHang =
+      req.user?.MaKhachHang ||
+      req.session?.user?.maKhachHang ||
+      req.session?.user?.MaKhachHang ||
+      req.body.maKhachHang;
+
     if (!maSan || !maKhachHang || !ngayDat || !gioBatDau || !gioKetThuc) {
       return res
         .status(400)
@@ -163,7 +170,7 @@ router.post("/dat-san", async (req, res) => {
     });
     res.status(201).json(result);
   } catch (err) {
-    console.error("❌ ERROR:", err.message); // 👈 thêm dòng này
+    console.error("ERROR:", err.message);
     res.status(400).json({ success: false, message: err.message });
   }
 });
@@ -172,13 +179,42 @@ router.post("/dat-san", async (req, res) => {
  * POST /api/dat-san/huy/:maLichHen
  * Hủy lịch hẹn + hoàn tiền (transaction)
  */
-router.post("/dat-san/huy/:maLichHen", async (req, res) => {
+router.post("/dat-san/huy/:maLichHen", requireAuth, async (req, res) => {
   try {
     const result = await huyLichHenVaHoanTien(req.params.maLichHen);
     res.json(result);
   } catch (err) {
-    console.error("❌ ERROR:", err.message); // 👈 thêm dòng này
+    console.error("ERROR:", err.message);
     res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * GET /api/san/lich-hen/cua-toi
+ * Lịch sử đặt sân của khách hàng đang đăng nhập
+ */
+router.get("/lich-hen/cua-toi", requireAuth, async (req, res) => {
+  try {
+    const maKhachHang =
+      req.user?.MaKhachHang ||
+      req.session?.user?.maKhachHang ||
+      req.session?.user?.MaKhachHang;
+
+    if (!maKhachHang) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Không xác định khách hàng" });
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+    const result = await layLichSuDatSan(
+      maKhachHang,
+      Number(page),
+      Number(limit),
+    );
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -199,6 +235,78 @@ router.get("/lich-hen/khach-hang/:maKhachHang", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+router.get(
+  "/quan-ly/lich-hen",
+  requireAuth,
+  requirePermission(PERMISSIONS.LICH_HEN_MANAGE),
+  async (req, res) => {
+    try {
+      const lichHen = await LichHen.find().sort({ ThoiDiemTao: -1 });
+      const data = await Promise.all(
+        lichHen.map(async (item) => {
+          const [san, khachHang, thanhToan] = await Promise.all([
+            San.findOne({ MaSan: item.MaSan }),
+            KhachHang.findOne({ MaKhachHang: item.MaKhachHang }),
+            ThanhToan.findOne({ MaLichHen: item.MaLichHen }),
+          ]);
+
+          return {
+            ...item.toObject(),
+            tenSan: san?.TenSan,
+            maChiNhanh: san?.MaChiNhanh,
+            tenKhachHang: khachHang?.HoTen,
+            thanhToan,
+          };
+        }),
+      );
+
+      res.json({ success: true, data });
+    } catch (err) {
+      sendError(res, err);
+    }
+  },
+);
+
+router.put(
+  "/quan-ly/lich-hen/:maLichHen",
+  requireAuth,
+  requirePermission(PERMISSIONS.LICH_HEN_MANAGE),
+  async (req, res) => {
+    try {
+      const lichHen = await LichHen.findOne({ MaLichHen: req.params.maLichHen });
+      if (!lichHen) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy lịch hẹn" });
+      }
+
+      const lichHenPayload = pickDefined(req.body, ["TrangThai"]);
+      const thanhToanPayload = pickDefined(req.body, ["TrangThaiThanhToan"]);
+
+      const [updated, thanhToan] = await Promise.all([
+        Object.keys(lichHenPayload).length
+          ? LichHen.findOneAndUpdate(
+              { MaLichHen: req.params.maLichHen },
+              lichHenPayload,
+              { new: true, runValidators: true },
+            )
+          : Promise.resolve(lichHen),
+        thanhToanPayload.TrangThaiThanhToan
+          ? ThanhToan.findOneAndUpdate(
+              { MaLichHen: req.params.maLichHen },
+              { TrangThai: thanhToanPayload.TrangThaiThanhToan },
+              { new: true, runValidators: true },
+            )
+          : ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
+      ]);
+
+      res.json({ success: true, data: { ...updated.toObject(), thanhToan } });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
 
 /**
  * GET /api/lich-hen/:maLichHen
@@ -239,7 +347,7 @@ router.get("/thanh-toan/:maThanhToan", async (req, res) => {
 router.post(
   "/quan-ly/san",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  requirePermission(PERMISSIONS.SAN_MANAGE),
   async (req, res) => {
     try {
       assertCanManageSan(req.user, req.body.MaChiNhanh);
@@ -254,7 +362,7 @@ router.post(
 router.put(
   "/quan-ly/san/:maSan",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  requirePermission(PERMISSIONS.SAN_MANAGE),
   async (req, res) => {
     try {
       const san = await San.findOne({ MaSan: req.params.maSan });
@@ -290,7 +398,7 @@ router.put(
 router.delete(
   "/quan-ly/san/:maSan",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  requirePermission(PERMISSIONS.SAN_MANAGE),
   async (req, res) => {
     try {
       const san = await San.findOne({ MaSan: req.params.maSan });
@@ -313,7 +421,7 @@ router.delete(
 router.get(
   "/quan-ly/khach-hang",
   requireAuth,
-  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE),
   async (req, res) => {
     try {
       assertCanManageKhachHang(req.user);
@@ -328,7 +436,7 @@ router.get(
 router.post(
   "/quan-ly/khach-hang",
   requireAuth,
-  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE),
   async (req, res) => {
     try {
       assertCanManageKhachHang(req.user);
@@ -343,7 +451,7 @@ router.post(
 router.put(
   "/quan-ly/khach-hang/:maKhachHang",
   requireAuth,
-  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE),
   async (req, res) => {
     try {
       assertCanManageKhachHang(req.user);
@@ -369,7 +477,7 @@ router.put(
 router.delete(
   "/quan-ly/khach-hang/:maKhachHang",
   requireAuth,
-  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE),
   async (req, res) => {
     try {
       assertCanManageKhachHang(req.user);
@@ -391,7 +499,7 @@ router.delete(
 router.put(
   "/:maSan",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  requirePermission(PERMISSIONS.SAN_MANAGE),
   async (req, res) => {
     try {
       const updated = await updateSanForUser(req);
@@ -405,7 +513,7 @@ router.put(
 router.delete(
   "/:maSan",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE_BRANCH),
+  requirePermission(PERMISSIONS.SAN_MANAGE),
   async (req, res) => {
     try {
       await deleteSanForUser(req);

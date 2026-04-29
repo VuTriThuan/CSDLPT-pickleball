@@ -1,11 +1,13 @@
 const mongoose = require("mongoose");
 
+const MONGO_URI = "mongodb://127.0.0.1:27017/pickleball_db";
+
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/pickleball");
-    console.log("MongoDB connected");
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ MongoDB connected");
   } catch (err) {
-    console.error("DB error:", err.message);
+    console.error("❌ MongoDB connection error:", err.message);
   }
 };
 

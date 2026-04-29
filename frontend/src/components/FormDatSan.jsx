@@ -1,33 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Toast from "./Toast";
-import { getSanTrong, postDatSan } from "../services/datSanService";
+import {
+  getChiNhanh,
+  getSanTrong,
+  postDatSan,
+} from "../services/datSanService";
 import { tinhSoGio, formatCurrency, PHUONG_THUC } from "../services/utils";
 
 export default function FormDatSan({ onSuccess }) {
   const today = new Date().toISOString().split("T")[0];
 
   const [form, setForm] = useState({
-    maKhachHang: "",
     ngayDat: today,
     gioBatDau: "08:00",
     gioKetThuc: "10:00",
+    maChiNhanh: "",
     maSan: "",
     phuongThucThanhToan: "tien_mat",
   });
+  const [chiNhanhs, setChiNhanhs] = useState([]);
   const [sanTrong, setSanTrong] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k, v) =>
+    setForm((f) => ({ ...f, [k]: v, ...(k !== "maSan" && { maSan: "" }) }));
+  const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Load danh sách chi nhánh 1 lần
+  useEffect(() => {
+    getChiNhanh()
+      .then(setChiNhanhs)
+      .catch(() => {});
+  }, []);
 
   const handleTimSan = async () => {
     if (!form.ngayDat || !form.gioBatDau || !form.gioKetThuc) return;
     setSearching(true);
     setSanTrong([]);
-    set("maSan", "");
+    setField("maSan", "");
     try {
       const ds = await getSanTrong(
+        form.maChiNhanh,
         form.ngayDat,
         form.gioBatDau,
         form.gioKetThuc,
@@ -46,15 +61,20 @@ export default function FormDatSan({ onSuccess }) {
   };
 
   const handleSubmit = async () => {
-    if (!form.maKhachHang || !form.maSan) {
-      setToast({ msg: "Vui lòng điền đầy đủ thông tin", type: "error" });
-      return;
-    }
+    if (!form.maSan)
+      return setToast({ msg: "Vui lòng chọn sân", type: "error" });
     setLoading(true);
     try {
-      const result = await postDatSan(form);
+      // maKhachHang KHÔNG truyền — backend tự lấy từ session
+      const result = await postDatSan({
+        maSan: form.maSan,
+        ngayDat: form.ngayDat,
+        gioBatDau: form.gioBatDau,
+        gioKetThuc: form.gioKetThuc,
+        phuongThucThanhToan: form.phuongThucThanhToan,
+      });
       onSuccess(result);
-      setForm((f) => ({ ...f, maSan: "", maKhachHang: "" }));
+      setForm((f) => ({ ...f, maSan: "" }));
       setSanTrong([]);
     } catch (err) {
       setToast({ msg: err.message, type: "error" });
@@ -80,17 +100,7 @@ export default function FormDatSan({ onSuccess }) {
         />
       )}
 
-      {/* ── Thông tin đặt ── */}
       <div className="form-grid">
-        <div className="form-field">
-          <label className="form-label">Mã khách hàng</label>
-          <input
-            className="form-input"
-            value={form.maKhachHang}
-            onChange={(e) => set("maKhachHang", e.target.value)}
-            placeholder="VD: KH-001"
-          />
-        </div>
         <div className="form-field">
           <label className="form-label">Ngày đặt</label>
           <input
@@ -100,6 +110,21 @@ export default function FormDatSan({ onSuccess }) {
             min={today}
             onChange={(e) => set("ngayDat", e.target.value)}
           />
+        </div>
+        <div className="form-field">
+          <label className="form-label">Chi nhánh</label>
+          <select
+            className="form-input"
+            value={form.maChiNhanh}
+            onChange={(e) => set("maChiNhanh", e.target.value)}
+          >
+            <option value="">-- Tất cả chi nhánh --</option>
+            {chiNhanhs.map((cn) => (
+              <option key={cn.MaChiNhanh} value={cn.MaChiNhanh}>
+                {cn.TenChiNhanh} (Shard {cn.ShardId})
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-field">
           <label className="form-label">Giờ bắt đầu</label>
@@ -126,10 +151,9 @@ export default function FormDatSan({ onSuccess }) {
         onClick={handleTimSan}
         disabled={searching}
       >
-        {searching ? "Đang tìm..." : "Tìm sân trống"}
+        {searching ? "Đang tìm..." : "🔍 Tìm sân trống"}
       </button>
 
-      {/* ── Danh sách sân trống ── */}
       {sanTrong.length > 0 && (
         <div className="section">
           <label className="form-label">
@@ -140,10 +164,12 @@ export default function FormDatSan({ onSuccess }) {
               <div
                 key={s.MaSan}
                 className={`san-card${form.maSan === s.MaSan ? " san-card--selected" : ""}`}
-                onClick={() => set("maSan", s.MaSan)}
+                onClick={() => setField("maSan", s.MaSan)}
               >
                 <div className="san-card__name">{s.TenSan}</div>
-                <div className="san-card__ma">{s.MaSan}</div>
+                <div className="san-card__ma">
+                  {s.MaSan} · {s.MaChiNhanh}
+                </div>
                 <div className="san-card__gia">
                   {formatCurrency(s.GiaTheoGio)}/giờ
                 </div>
@@ -153,7 +179,6 @@ export default function FormDatSan({ onSuccess }) {
         </div>
       )}
 
-      {/* ── Phương thức thanh toán ── */}
       {selectedSan && (
         <div className="section">
           <label className="form-label">Phương thức thanh toán</label>
@@ -162,7 +187,7 @@ export default function FormDatSan({ onSuccess }) {
               <div
                 key={p.value}
                 className={`payment-option${form.phuongThucThanhToan === p.value ? " payment-option--selected" : ""}`}
-                onClick={() => set("phuongThucThanhToan", p.value)}
+                onClick={() => setField("phuongThucThanhToan", p.value)}
               >
                 {p.label}
               </div>
@@ -171,11 +196,10 @@ export default function FormDatSan({ onSuccess }) {
         </div>
       )}
 
-      {/* ── Tóm tắt tiền ── */}
       {selectedSan && (
         <div className="summary-box">
           <div className="summary-row">
-            <span>Sân đã chọn</span>
+            <span>Sân</span>
             <strong>{selectedSan.TenSan}</strong>
           </div>
           <div className="summary-row">
@@ -195,14 +219,11 @@ export default function FormDatSan({ onSuccess }) {
 
       <button
         className="btn btn--primary btn--full"
-        style={{
-          marginTop: 20,
-          opacity: loading || !form.maSan || !form.maKhachHang ? 0.6 : 1,
-        }}
+        style={{ marginTop: 20, opacity: loading || !form.maSan ? 0.6 : 1 }}
         onClick={handleSubmit}
-        disabled={loading || !form.maSan || !form.maKhachHang}
+        disabled={loading || !form.maSan}
       >
-        {loading ? "Đang xử lý..." : "Xác nhận đặt sân & Thanh toán"}
+        {loading ? "⏳ Đang xử lý..." : "✅ Xác nhận đặt sân & Thanh toán"}
       </button>
     </div>
   );

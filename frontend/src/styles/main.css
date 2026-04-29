@@ -84,6 +84,19 @@ body {
   margin-top: 6px;
   font-size: 15px;
 }
+.auth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.auth-actions__user {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 700;
+}
 
 /* ── Card ─────────────────────────────────────── */
 .card {
@@ -509,10 +522,71 @@ body {
   }
 }
 
+/* ── Auth container ───────────────────────────── */
+.auth-container {
+  width: 100%;
+  max-width: 420px;
+  animation: fadeIn 0.5s ease;
+}
+
+/* ── User bar ─────────────────────────────────── */
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 18px;
+  margin-bottom: 16px;
+}
+.user-bar__name {
+  font-weight: 700;
+  color: #e2e8f0;
+  font-size: 14px;
+  flex: 1;
+}
+.user-bar__code {
+  font-size: 12px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.user-bar__logout {
+  background: none;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+.user-bar__logout:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* ── Lich empty state ─────────────────────────── */
+.lich-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px 0;
+  font-size: 15px;
+}
+
 /* Admin demo: nhiem vu 1, 2, 3 */
 .app-wrapper {
   background:
-    radial-gradient(circle at 50% 18%, rgba(59, 130, 246, 0.12), transparent 28%),
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(59, 130, 246, 0.12),
+      transparent 28%
+    ),
     linear-gradient(160deg, #101827 0%, #1c2838 48%, #101827 100%);
 }
 
@@ -706,6 +780,12 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.payment-cell {
+  display: grid;
+  gap: 8px;
+  min-width: 150px;
 }
 
 .btn-text {

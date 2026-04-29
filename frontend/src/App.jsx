@@ -1,36 +1,45 @@
 import { useEffect, useMemo, useState } from "react";
+import AuthPage from "./components/AuthPage";
 import FormDatSan from "./components/FormDatSan";
 import LichSuDatSan from "./components/LichSuDatSan";
 import ModalBill from "./components/ModalBill";
+import { useAuth } from "./context/AuthContext";
 import {
   createKhachHang,
   createSan,
   deleteKhachHang,
   deleteSan,
   getKhachHangList,
+  getLichHenList,
   getSanList,
   updateKhachHang,
+  updateLichHen,
   updateSan,
 } from "./services/adminService";
 import "./styles/main.css";
 
-const TABS = [
+const USER_TABS = [
   { key: "dat", label: "Đặt sân" },
   { key: "lich", label: "Lịch sử" },
-  { key: "quyen", label: "Phân quyền" },
+];
+
+const ADMIN_TABS = [
+  { key: "lich", label: "Lịch đặt" },
   { key: "san", label: "Quản lý sân" },
   { key: "khach", label: "Khách hàng" },
 ];
+
+const ROLE_LABELS = {
+  user: "Khách hàng",
+  admin: "Quản lý hệ thống",
+};
+
+const MANAGE_ROLES = ["admin"];
 
 const ACTIONS = [
   { key: "create", label: "Thêm" },
   { key: "update", label: "Sửa" },
   { key: "delete", label: "Xóa" },
-];
-
-const ROLES = [
-  { value: "quan_ly_chi_nhanh", label: "Quản lý chi nhánh" },
-  { value: "quan_ly_he_thong", label: "Quản lý hệ thống" },
 ];
 
 const TRANG_THAI_SAN = [
@@ -54,61 +63,22 @@ const initialKhachHang = {
   Email: "",
 };
 
+const tabsForRole = (role) => {
+  if (role === "admin") return ADMIN_TABS;
+  return USER_TABS;
+};
+
 const cleanPayload = (payload) =>
   Object.fromEntries(
     Object.entries(payload).filter(([, value]) => value !== "" && value != null),
   );
 
-function AuthPanel({ auth, setAuth }) {
-  const headerPreview = useMemo(
-    () => ({
-      "x-user-role": auth.role,
-      "x-branch-id": auth.branchId || "(bỏ trống nếu là quản lý hệ thống)",
-    }),
-    [auth],
-  );
-
-  return (
-    <div className="panel-stack">
-      <div className="form-grid">
-        <div className="form-field">
-          <label className="form-label">Vai trò demo</label>
-          <select
-            className="form-input"
-            value={auth.role}
-            onChange={(e) =>
-              setAuth((current) => ({ ...current, role: e.target.value }))
-            }
-          >
-            {ROLES.map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-field">
-          <label className="form-label">Mã chi nhánh</label>
-          <input
-            className="form-input"
-            value={auth.branchId}
-            onChange={(e) =>
-              setAuth((current) => ({ ...current, branchId: e.target.value }))
-            }
-            placeholder="VD: CN001"
-          />
-        </div>
-      </div>
-
-      <div className="permission-card">
-        <div>
-          <span className="permission-card__label">Header gửi lên API</span>
-          <pre>{JSON.stringify(headerPreview, null, 2)}</pre>
-        </div>
-      </div>
-    </div>
-  );
-}
+const formatPrice = (value) =>
+  Number(value || 0).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  });
 
 function SanPanel({ auth, setToast }) {
   const [sanList, setSanList] = useState([]);
@@ -221,13 +191,6 @@ function SanPanel({ auth, setToast }) {
 
   const statusLabel = (status) =>
     TRANG_THAI_SAN.find((item) => item.value === status)?.label || status;
-
-  const formatPrice = (value) =>
-    Number(value || 0).toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      maximumFractionDigits: 0,
-    });
 
   return (
     <div className="admin-panel">
@@ -440,6 +403,153 @@ function SanPanel({ auth, setToast }) {
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function LichHenPanel({ auth, setToast }) {
+  const [lichHenList, setLichHenList] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadLichHen = async () => {
+    setLoading(true);
+    try {
+      const res = await getLichHenList(auth);
+      setLichHenList(res.data || []);
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLichHen();
+  }, [auth.role]);
+
+  const saveStatus = async (maLichHen, TrangThai) => {
+    setLoading(true);
+    try {
+      const res = await updateLichHen(maLichHen, { TrangThai }, auth);
+      setLichHenList((current) =>
+        current.map((item) =>
+          item.MaLichHen === maLichHen ? { ...item, ...res.data } : item,
+        ),
+      );
+      setToast({ type: "ok", msg: "Đã cập nhật lịch đặt" });
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const savePaymentStatus = async (maLichHen, TrangThaiThanhToan) => {
+    setLoading(true);
+    try {
+      const res = await updateLichHen(
+        maLichHen,
+        { TrangThaiThanhToan },
+        auth,
+      );
+      setLichHenList((current) =>
+        current.map((item) =>
+          item.MaLichHen === maLichHen
+            ? { ...item, thanhToan: res.data.thanhToan }
+            : item,
+        ),
+      );
+      setToast({ type: "ok", msg: "Đã cập nhật trạng thái thanh toán" });
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="admin-panel">
+      <div className="admin-toolbar">
+        <div>
+          <h2 className="admin-title">Quản lý lịch đặt</h2>
+          <p className="admin-subtitle">Danh sách lịch đặt của toàn hệ thống</p>
+        </div>
+      </div>
+
+      <div className="table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Mã lịch</th>
+              <th>Khách hàng</th>
+              <th>Sân</th>
+              <th>Ngày</th>
+              <th>Giờ</th>
+              <th>Thanh toán</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lichHenList.map((item) => (
+              <tr key={item.MaLichHen}>
+                <td className="admin-table__id">{item.MaLichHen}</td>
+                <td>{item.tenKhachHang || item.MaKhachHang}</td>
+                <td>{item.tenSan || item.MaSan}</td>
+                <td>{new Date(item.NgayDat).toLocaleDateString("vi-VN")}</td>
+                <td>
+                  {item.GioBatDau} - {item.GioKetThuc}
+                </td>
+                <td>
+                  {item.thanhToan ? (
+                    <div className="payment-cell">
+                      <strong>{formatPrice(item.thanhToan.SoTien)}</strong>
+                      <select
+                        className="table-input"
+                        value={item.thanhToan.TrangThai}
+                        onChange={(event) =>
+                          savePaymentStatus(
+                            item.MaLichHen,
+                            event.target.value,
+                          )
+                        }
+                        disabled={loading}
+                      >
+                        <option value="thanh_cong">Đã thanh toán</option>
+                        <option value="cho_xu_ly">Chưa thanh toán</option>
+                      </select>
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td>
+                  <select
+                    className="table-input"
+                    value={item.TrangThai}
+                    onChange={(event) =>
+                      saveStatus(item.MaLichHen, event.target.value)
+                    }
+                    disabled={loading}
+                  >
+                    <option value="cho_xac_nhan">Chờ xác nhận</option>
+                    <option value="da_xac_nhan">Đã xác nhận</option>
+                    <option value="da_huy">Đã hủy</option>
+                    <option value="hoan_thanh">Hoàn thành</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+
+            {!lichHenList.length && (
+              <tr>
+                <td colSpan="7" className="table-empty">
+                  {loading ? "Đang tải dữ liệu..." : "Chưa có lịch đặt nào"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -724,13 +834,35 @@ function KhachHangPanel({ auth, setToast }) {
 }
 
 export default function App() {
-  const [tab, setTab] = useState("dat");
+  const { user, loading: authLoading, dangXuat } = useAuth();
+  const [userTab, setUserTab] = useState("dat");
+  const [manageTab, setManageTab] = useState("san");
   const [billData, setBillData] = useState(null);
   const [toast, setToast] = useState(null);
-  const [auth, setAuth] = useState({
-    role: "quan_ly_chi_nhanh",
-    branchId: "CN001",
-  });
+  const isManagementRole = MANAGE_ROLES.includes(user?.role);
+  const tabs = tabsForRole(user?.role);
+  const activeTab = isManagementRole ? manageTab : userTab;
+  const adminAuth = useMemo(
+    () => ({
+      role: user?.role,
+      branchId: user?.MaChiNhanh || user?.maChiNhanh || "CN001",
+    }),
+    [user],
+  );
+
+  if (authLoading) {
+    return (
+      <div className="app-wrapper">
+        <div className="app-inner">
+          <div className="card">
+            <div className="card__body">Đang kiểm tra đăng nhập...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return <AuthPage />;
 
   return (
     <div className="app-wrapper">
@@ -739,17 +871,33 @@ export default function App() {
           <div className="app-header__icon"></div>
           <h1 className="app-header__title">Pickleball Court</h1>
           <p className="app-header__sub">
-            Quản lý sân — Đặt sân &amp; Thanh toán
+            {isManagementRole
+              ? ROLE_LABELS[user.role]
+              : "Đặt sân & Thanh toán"}
           </p>
+          <div className="auth-actions">
+            <span className="auth-actions__user">
+              {user.hoTen || user.email} ({user.role})
+            </span>
+            <button className="btn btn--secondary" onClick={dangXuat}>
+              Đăng xuất
+            </button>
+          </div>
         </header>
 
         <div className="card">
           <nav className="tabs">
-            {TABS.map((item) => (
+            {tabs.map((item) => (
               <button
                 key={item.key}
-                className={`tab-btn${tab === item.key ? " tab-btn--active" : ""}`}
-                onClick={() => setTab(item.key)}
+                className={`tab-btn${
+                  activeTab === item.key ? " tab-btn--active" : ""
+                }`}
+                onClick={() =>
+                  isManagementRole
+                    ? setManageTab(item.key)
+                    : setUserTab(item.key)
+                }
               >
                 {item.label}
               </button>
@@ -757,12 +905,18 @@ export default function App() {
           </nav>
 
           <div className="card__body">
-            {tab === "dat" && <FormDatSan onSuccess={setBillData} />}
-            {tab === "lich" && <LichSuDatSan />}
-            {tab === "quyen" && <AuthPanel auth={auth} setAuth={setAuth} />}
-            {tab === "san" && <SanPanel auth={auth} setToast={setToast} />}
-            {tab === "khach" && (
-              <KhachHangPanel auth={auth} setToast={setToast} />
+            {!isManagementRole && userTab === "dat" && (
+              <FormDatSan onSuccess={setBillData} />
+            )}
+            {!isManagementRole && userTab === "lich" && <LichSuDatSan />}
+            {isManagementRole && manageTab === "lich" && (
+              <LichHenPanel auth={adminAuth} setToast={setToast} />
+            )}
+            {isManagementRole && manageTab === "san" && (
+              <SanPanel auth={adminAuth} setToast={setToast} />
+            )}
+            {isManagementRole && manageTab === "khach" && (
+              <KhachHangPanel auth={adminAuth} setToast={setToast} />
             )}
           </div>
         </div>

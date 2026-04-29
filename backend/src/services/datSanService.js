@@ -214,7 +214,7 @@ const huyLichHenVaHoanTien = async (maLichHen) => {
 /**
  * Lấy danh sách sân còn trống theo ngày + giờ
  */
-const laySanTrong = async (ngayDat, gioBatDau, gioKetThuc) => {
+const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
   const ngay = new Date(ngayDat);
   ngay.setHours(0, 0, 0, 0);
   const ngayTiepTheo = new Date(ngay);
@@ -228,10 +228,14 @@ const laySanTrong = async (ngayDat, gioBatDau, gioKetThuc) => {
 
   const maSanBan = lichHenXungDot.map((l) => l.MaSan);
 
-  const sanTrong = await San.find({
+  const sanFilter = {
     MaSan: { $nin: maSanBan },
     TrangThai: "hoat_dong",
-  });
+  };
+
+  if (maChiNhanh) sanFilter.MaChiNhanh = maChiNhanh;
+
+  const sanTrong = await San.find(sanFilter);
 
   return sanTrong;
 };

@@ -1,13 +1,16 @@
 const API = "http://localhost:5000/api/san";
 
-const authHeaders = (auth) => ({
+const authHeaders = (auth = {}) => ({
   "Content-Type": "application/json",
   "x-user-role": auth.role,
   "x-branch-id": auth.branchId,
 });
 
-const requestJson = async (url, options) => {
-  const res = await fetch(url, options);
+const requestJson = async (url, options = {}) => {
+  const res = await fetch(url, {
+    credentials: "include",
+    ...options,
+  });
   const data = await res.json();
   if (!data.success) throw new Error(data.message || "Thao tác thất bại");
   return data;
@@ -33,6 +36,18 @@ export const deleteSan = (maSan, auth) =>
   requestJson(`${API}/${maSan}`, {
     method: "DELETE",
     headers: authHeaders(auth),
+  });
+
+export const getLichHenList = (auth) =>
+  requestJson(`${API}/quan-ly/lich-hen`, {
+    headers: authHeaders(auth),
+  });
+
+export const updateLichHen = (maLichHen, payload, auth) =>
+  requestJson(`${API}/quan-ly/lich-hen/${maLichHen}`, {
+    method: "PUT",
+    headers: authHeaders(auth),
+    body: JSON.stringify(payload),
   });
 
 export const getKhachHangList = (auth) =>

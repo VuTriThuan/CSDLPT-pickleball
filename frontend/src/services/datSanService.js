@@ -1,40 +1,36 @@
-const API = "http://localhost:5000/api/san";
+const API = "http://localhost:5000/api";
 
-export const getSanTrong = async (ngayDat, gioBatDau, gioKetThuc) => {
-  const res = await fetch(
-    `${API}/trong?ngayDat=${ngayDat}&gioBatDau=${gioBatDau}&gioKetThuc=${gioKetThuc}`,
-  );
+const fetchJSON = async (url, options = {}) => {
+  const res = await fetch(url, {
+    credentials: "include", // gửi cookie session theo mọi request
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
   const data = await res.json();
-  if (!data.success) throw new Error(data.message || "Lỗi tìm sân trống");
-  return data.data;
+  if (!data.success) throw new Error(data.message || "Lỗi không xác định");
+  return data;
 };
 
-export const postDatSan = async (payload) => {
-  console.log("🚀 Payload gửi:", payload);
-  const res = await fetch(`${API}/dat-san`, {
+export const getChiNhanh = () =>
+  fetchJSON(`${API}/chi-nhanh`).then((d) => d.data);
+
+export const getSanTrong = (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
+  const q = new URLSearchParams({ ngayDat, gioBatDau, gioKetThuc });
+  if (maChiNhanh) q.set("maChiNhanh", maChiNhanh);
+  return fetchJSON(`${API}/san/trong?${q}`).then((d) => d.data);
+};
+
+// maKhachHang KHÔNG cần truyền nữa — backend lấy từ session
+export const postDatSan = (payload) =>
+  fetchJSON(`${API}/san/dat-san`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.message || "Đặt sân thất bại");
-  return data;
-};
 
-export const getLichSuDatSan = async (maKhachHang, page = 1, limit = 10) => {
-  const res = await fetch(
-    `${API}/lich-hen/khach-hang/${maKhachHang}?page=${page}&limit=${limit}`,
+export const getLichSuCuaToi = (page = 1, limit = 10) =>
+  fetchJSON(`${API}/san/lich-hen/cua-toi?page=${page}&limit=${limit}`).then(
+    (data) => data.data,
   );
-  const data = await res.json();
-  if (!data.success) throw new Error(data.message || "Lỗi tải lịch sử");
-  return data;
-};
 
-export const postHuyLichHen = async (maLichHen) => {
-  const res = await fetch(`${API}/dat-san/huy/${maLichHen}`, {
-    method: "POST",
-  });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.message || "Hủy lịch thất bại");
-  return data;
-};
+export const postHuyLichHen = (maLichHen) =>
+  fetchJSON(`${API}/san/dat-san/huy/${maLichHen}`, { method: "POST" });

@@ -1,42 +1,42 @@
 const ROLES = {
-  KHACH_HANG: "khach_hang",
-  NHAN_VIEN_CHI_NHANH: "nhan_vien_chi_nhanh",
-  QUAN_LY_CHI_NHANH: "quan_ly_chi_nhanh",
-  QUAN_LY_HE_THONG: "quan_ly_he_thong",
+  USER: "user",
+  ADMIN: "admin",
 };
 
 const ROLE_ALIASES = {
-  khach_hang: ROLES.KHACH_HANG,
-  khachhang: ROLES.KHACH_HANG,
-  customer: ROLES.KHACH_HANG,
+  user: ROLES.USER,
+  khach_hang: ROLES.USER,
+  khachhang: ROLES.USER,
+  customer: ROLES.USER,
 
-  nhan_vien: ROLES.NHAN_VIEN_CHI_NHANH,
-  nhan_vien_chi_nhanh: ROLES.NHAN_VIEN_CHI_NHANH,
-  staff: ROLES.NHAN_VIEN_CHI_NHANH,
+  staff: ROLES.USER,
+  nhan_vien: ROLES.USER,
+  nhan_vien_chi_nhanh: ROLES.USER,
+  manager: ROLES.USER,
+  quan_ly_chi_nhanh: ROLES.USER,
+  branch_manager: ROLES.USER,
 
-  quan_ly_chi_nhanh: ROLES.QUAN_LY_CHI_NHANH,
-  branch_manager: ROLES.QUAN_LY_CHI_NHANH,
-
-  quan_ly_he_thong: ROLES.QUAN_LY_HE_THONG,
-  system_admin: ROLES.QUAN_LY_HE_THONG,
-  admin: ROLES.QUAN_LY_HE_THONG,
+  admin: ROLES.ADMIN,
+  quan_ly_he_thong: ROLES.ADMIN,
+  system_admin: ROLES.ADMIN,
 };
 
 const PERMISSIONS = {
-  SAN_MANAGE_BRANCH: "san:manage_branch",
-  KHACH_HANG_MANAGE_SYSTEM: "khach_hang:manage_system",
+  SAN_MANAGE: "san:manage",
+  LICH_HEN_MANAGE: "lich_hen:manage",
+  KHACH_HANG_MANAGE: "khach_hang:manage",
 };
 
 const ROLE_PERMISSIONS = {
-  [ROLES.KHACH_HANG]: [],
-  [ROLES.NHAN_VIEN_CHI_NHANH]: [],
-  [ROLES.QUAN_LY_CHI_NHANH]: [PERMISSIONS.SAN_MANAGE_BRANCH],
-  [ROLES.QUAN_LY_HE_THONG]: Object.values(PERMISSIONS),
+  [ROLES.USER]: [],
+  [ROLES.ADMIN]: Object.values(PERMISSIONS),
 };
 
-const normalizeRole = (role) => ROLE_ALIASES[String(role || "").trim()] || null;
+const normalizeRole = (role) =>
+  ROLE_ALIASES[String(role || "").trim().toLowerCase()] || null;
 
-const getPermissionsForRole = (role) => ROLE_PERMISSIONS[role] || [];
+const getPermissionsForRole = (role) =>
+  ROLE_PERMISSIONS[normalizeRole(role)] || [];
 
 module.exports = {
   ROLES,

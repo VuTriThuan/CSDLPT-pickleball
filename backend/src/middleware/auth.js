@@ -4,32 +4,24 @@ const {
   getPermissionsForRole,
 } = require("../constants/roles");
 
-const readHeader = (req, name) => req.get(name) || req.get(`x-${name}`);
+const buildSessionUser = (sessionUser) => {
+  if (!sessionUser) return null;
 
-const authenticateDemoUser = (req, _res, next) => {
-  const role = normalizeRole(
-    readHeader(req, "user-role") || readHeader(req, "role") || req.query.role,
-  );
+  const role = normalizeRole(sessionUser.role || sessionUser.Role);
+  if (!role) return null;
 
-  req.user = role
-    ? {
-        role,
-        permissions: getPermissionsForRole(role),
-        MaKhachHang:
-          readHeader(req, "customer-id") ||
-          readHeader(req, "ma-khach-hang") ||
-          req.query.maKhachHang,
-        MaNhanVien:
-          readHeader(req, "employee-id") ||
-          readHeader(req, "ma-nhan-vien") ||
-          req.query.maNhanVien,
-        MaChiNhanh:
-          readHeader(req, "branch-id") ||
-          readHeader(req, "ma-chi-nhanh") ||
-          req.query.maChiNhanh,
-      }
-    : null;
+  return {
+    ...sessionUser,
+    role,
+    MaKhachHang: sessionUser.MaKhachHang || sessionUser.maKhachHang,
+    MaNhanVien: sessionUser.MaNhanVien || sessionUser.maNhanVien,
+    MaChiNhanh: sessionUser.MaChiNhanh || sessionUser.maChiNhanh,
+    permissions: getPermissionsForRole(role),
+  };
+};
 
+const attachUser = (req, _res, next) => {
+  req.user = buildSessionUser(req.session?.user);
   next();
 };
 
@@ -37,8 +29,20 @@ const requireAuth = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      message:
-        "Chưa xác thực. Gửi header x-user-role để kích hoạt phân quyền demo.",
+      message: "Chưa đăng nhập hoặc chưa cung cấp quyền",
+    });
+  }
+
+  next();
+};
+
+const requireAdmin = (req, res, next) => {
+  if (!req.user) return requireAuth(req, res, next);
+
+  if (req.user.role !== ROLES.ADMIN) {
+    return res.status(403).json({
+      success: false,
+      message: "Không có quyền truy cập",
     });
   }
 
@@ -46,9 +50,8 @@ const requireAuth = (req, res, next) => {
 };
 
 const hasRole = (user, role) => user?.role === role;
-const isSystemManager = (user) => hasRole(user, ROLES.QUAN_LY_HE_THONG);
-const isBranchUser = (user) =>
-  [ROLES.NHAN_VIEN_CHI_NHANH, ROLES.QUAN_LY_CHI_NHANH].includes(user?.role);
+const isSystemManager = (user) => hasRole(user, ROLES.ADMIN);
+const isBranchUser = () => false;
 
 const requirePermission =
   (...permissions) =>
@@ -56,8 +59,9 @@ const requirePermission =
     if (!req.user) return requireAuth(req, res, next);
     if (isSystemManager(req.user)) return next();
 
+    const userPermissions = req.user.permissions || [];
     const allowed = permissions.some((permission) =>
-      req.user.permissions.includes(permission),
+      userPermissions.includes(permission),
     );
 
     if (!allowed) {
@@ -71,8 +75,9 @@ const requirePermission =
   };
 
 module.exports = {
-  authenticateDemoUser,
+  attachUser,
   requireAuth,
+  requireAdmin,
   requirePermission,
   hasRole,
   isSystemManager,
