@@ -5,7 +5,11 @@ const session = require("express-session");
 
 const connectDB = require("./config/database");
 const datSanRoutes = require("./routes/datSan");
+const sanRoutes = require("./routes/san");
+const chiNhanhRoutes = require("./routes/chiNhanh");
+const khachHangRoutes = require("./routes/khachHang");
 const authRoutes = require("./routes/auth");
+const { attachUser } = require("./middleware/auth");
 
 const app = express();
 
@@ -59,8 +63,12 @@ connectDB();
  * 5. Routes
  * =============================
  */
+app.use(attachUser);
 app.use("/api/auth", authRoutes);
 app.use("/api/san", datSanRoutes);
+app.use("/api/san", sanRoutes);
+app.use("/api/san", khachHangRoutes);
+app.use("/api", chiNhanhRoutes);
 
 /**
  * =============================
