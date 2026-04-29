@@ -35,6 +35,11 @@ export const deleteSan = (maSan, auth) =>
     headers: authHeaders(auth),
   });
 
+export const getKhachHangList = (auth) =>
+  requestJson(`${API}/quan-ly/khach-hang`, {
+    headers: authHeaders(auth),
+  });
+
 export const createKhachHang = (payload, auth) =>
   requestJson(`${API}/quan-ly/khach-hang`, {
     method: "POST",

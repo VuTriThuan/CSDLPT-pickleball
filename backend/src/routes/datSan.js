@@ -310,6 +310,21 @@ router.delete(
 );
 
 // 3. Them, sua, xoa thong tin khach hang
+router.get(
+  "/quan-ly/khach-hang",
+  requireAuth,
+  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE_SYSTEM),
+  async (req, res) => {
+    try {
+      assertCanManageKhachHang(req.user);
+      const khachHang = await KhachHang.find().sort({ MaKhachHang: 1 });
+      res.json({ success: true, data: khachHang });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
 router.post(
   "/quan-ly/khach-hang",
   requireAuth,

@@ -7,6 +7,7 @@ import {
   createSan,
   deleteKhachHang,
   deleteSan,
+  getKhachHangList,
   getSanList,
   updateKhachHang,
   updateSan,
@@ -444,45 +445,98 @@ function SanPanel({ auth, setToast }) {
 }
 
 function KhachHangPanel({ auth, setToast }) {
-  const [action, setAction] = useState("create");
-  const [form, setForm] = useState(initialKhachHang);
+  const [khachHangList, setKhachHangList] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [newForm, setNewForm] = useState(initialKhachHang);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState(initialKhachHang);
   const [loading, setLoading] = useState(false);
 
-  const set = (key, value) =>
-    setForm((current) => ({ ...current, [key]: value }));
+  const loadKhachHang = async () => {
+    setLoading(true);
+    try {
+      const res = await getKhachHangList(auth);
+      setKhachHangList(res.data || []);
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const submit = async () => {
-    if (!form.MaKhachHang && action !== "create") {
-      setToast({ type: "error", msg: "Cần nhập MaKhachHang" });
+  useEffect(() => {
+    loadKhachHang();
+  }, [auth.role, auth.branchId]);
+
+  const setNew = (key, value) =>
+    setNewForm((current) => ({ ...current, [key]: value }));
+
+  const setEdit = (key, value) =>
+    setEditForm((current) => ({ ...current, [key]: value }));
+
+  const addKhachHang = async () => {
+    if (!newForm.MaKhachHang || !newForm.HoTen || !newForm.SoDienThoai) {
+      setToast({ type: "error", msg: "Cần nhập đầy đủ thông tin khách hàng" });
       return;
     }
 
     setLoading(true);
     try {
-      if (action === "create") {
-        await createKhachHang(form, auth);
-        setToast({ type: "ok", msg: "Đã thêm khách hàng" });
-      }
+      const res = await createKhachHang(newForm, auth);
+      setKhachHangList((current) => [res.data, ...current]);
+      setNewForm(initialKhachHang);
+      setShowForm(false);
+      setToast({ type: "ok", msg: "Đã thêm khách hàng" });
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (action === "update") {
-        await updateKhachHang(
-          form.MaKhachHang,
-          cleanPayload({
-            HoTen: form.HoTen,
-            SoDienThoai: form.SoDienThoai,
-            Email: form.Email,
-          }),
-          auth,
-        );
-        setToast({ type: "ok", msg: "Đã sửa khách hàng" });
-      }
+  const startEdit = (khachHang) => {
+    setEditingId(khachHang.MaKhachHang);
+    setEditForm({
+      MaKhachHang: khachHang.MaKhachHang,
+      HoTen: khachHang.HoTen || "",
+      SoDienThoai: khachHang.SoDienThoai || "",
+      Email: khachHang.Email || "",
+    });
+  };
 
-      if (action === "delete") {
-        await deleteKhachHang(form.MaKhachHang, auth);
-        setToast({ type: "ok", msg: "Đã xóa khách hàng" });
-      }
+  const saveEdit = async (maKhachHang) => {
+    setLoading(true);
+    try {
+      const res = await updateKhachHang(
+        maKhachHang,
+        cleanPayload({
+          HoTen: editForm.HoTen,
+          SoDienThoai: editForm.SoDienThoai,
+          Email: editForm.Email,
+        }),
+        auth,
+      );
+      setKhachHangList((current) =>
+        current.map((item) => (item.MaKhachHang === maKhachHang ? res.data : item)),
+      );
+      setEditingId(null);
+      setToast({ type: "ok", msg: "Đã sửa khách hàng" });
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      setForm(initialKhachHang);
+  const removeKhachHang = async (maKhachHang) => {
+    if (!window.confirm(`Xóa khách hàng ${maKhachHang}?`)) return;
+    setLoading(true);
+    try {
+      await deleteKhachHang(maKhachHang, auth);
+      setKhachHangList((current) =>
+        current.filter((item) => item.MaKhachHang !== maKhachHang),
+      );
+      setToast({ type: "ok", msg: "Đã xóa khách hàng" });
     } catch (err) {
       setToast({ type: "error", msg: err.message });
     } finally {
@@ -491,37 +545,38 @@ function KhachHangPanel({ auth, setToast }) {
   };
 
   return (
-    <div className="panel-stack">
-      <div className="segmented">
-        {ACTIONS.map((item) => (
-          <button
-            key={item.key}
-            className={`segmented__btn${action === item.key ? " segmented__btn--active" : ""}`}
-            onClick={() => setAction(item.key)}
-          >
-            {item.label}
-          </button>
-        ))}
+    <div className="admin-panel">
+      <div className="admin-toolbar">
+        <div>
+          <h2 className="admin-title">Quản lý khách hàng</h2>
+          <p className="admin-subtitle">Danh sách khách hàng từ API quản trị</p>
+        </div>
+        <button
+          className="btn btn--primary"
+          onClick={() => setShowForm((current) => !current)}
+        >
+          Thêm khách hàng
+        </button>
       </div>
 
-      <div className="form-grid">
-        <div className="form-field">
-          <label className="form-label">Mã khách hàng</label>
-          <input
-            className="form-input"
-            value={form.MaKhachHang}
-            onChange={(e) => set("MaKhachHang", e.target.value)}
-            placeholder="VD: KH001"
-          />
-        </div>
-        {action !== "delete" && (
-          <>
+      {showForm && (
+        <div className="admin-form-card">
+          <div className="form-grid">
+            <div className="form-field">
+              <label className="form-label">Mã khách hàng</label>
+              <input
+                className="form-input"
+                value={newForm.MaKhachHang}
+                onChange={(e) => setNew("MaKhachHang", e.target.value)}
+                placeholder="VD: KH001"
+              />
+            </div>
             <div className="form-field">
               <label className="form-label">Họ tên</label>
               <input
                 className="form-input"
-                value={form.HoTen}
-                onChange={(e) => set("HoTen", e.target.value)}
+                value={newForm.HoTen}
+                onChange={(e) => setNew("HoTen", e.target.value)}
                 placeholder="VD: Nguyễn Văn A"
               />
             </div>
@@ -529,8 +584,8 @@ function KhachHangPanel({ auth, setToast }) {
               <label className="form-label">Số điện thoại</label>
               <input
                 className="form-input"
-                value={form.SoDienThoai}
-                onChange={(e) => set("SoDienThoai", e.target.value)}
+                value={newForm.SoDienThoai}
+                onChange={(e) => setNew("SoDienThoai", e.target.value)}
                 placeholder="VD: 0901234567"
               />
             </div>
@@ -539,24 +594,131 @@ function KhachHangPanel({ auth, setToast }) {
               <input
                 className="form-input"
                 type="email"
-                value={form.Email}
-                onChange={(e) => set("Email", e.target.value)}
+                value={newForm.Email}
+                onChange={(e) => setNew("Email", e.target.value)}
                 placeholder="VD: khach@example.com"
               />
             </div>
-          </>
-        )}
-      </div>
+          </div>
+          <div className="admin-form-actions">
+            <button className="btn btn--primary" onClick={addKhachHang} disabled={loading}>
+              Thêm
+            </button>
+            <button
+              className="btn btn--secondary"
+              onClick={() => {
+                setShowForm(false);
+                setNewForm(initialKhachHang);
+              }}
+              disabled={loading}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )}
 
-      <button
-        className="btn btn--primary btn--full"
-        onClick={submit}
-        disabled={loading}
-      >
-        {loading
-          ? "Đang xử lý..."
-          : `${ACTIONS.find((item) => item.key === action).label} khách hàng`}
-      </button>
+      <div className="table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Họ tên</th>
+              <th>Số điện thoại</th>
+              <th>Email</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {khachHangList.map((item) => {
+              const isEditing = editingId === item.MaKhachHang;
+              return (
+                <tr key={item.MaKhachHang}>
+                  <td className="admin-table__id">{item.MaKhachHang}</td>
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="table-input"
+                        value={editForm.HoTen}
+                        onChange={(e) => setEdit("HoTen", e.target.value)}
+                      />
+                    ) : (
+                      item.HoTen
+                    )}
+                  </td>
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="table-input"
+                        value={editForm.SoDienThoai}
+                        onChange={(e) => setEdit("SoDienThoai", e.target.value)}
+                      />
+                    ) : (
+                      item.SoDienThoai
+                    )}
+                  </td>
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="table-input"
+                        type="email"
+                        value={editForm.Email}
+                        onChange={(e) => setEdit("Email", e.target.value)}
+                      />
+                    ) : (
+                      item.Email || "-"
+                    )}
+                  </td>
+                  <td>
+                    {isEditing ? (
+                      <div className="table-actions">
+                        <button
+                          className="btn-text btn-text--primary"
+                          onClick={() => saveEdit(item.MaKhachHang)}
+                          disabled={loading}
+                        >
+                          Lưu
+                        </button>
+                        <button
+                          className="btn-text"
+                          onClick={() => setEditingId(null)}
+                          disabled={loading}
+                        >
+                          Hủy
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="table-actions">
+                        <button
+                          className="btn-text btn-text--primary"
+                          onClick={() => startEdit(item)}
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          className="btn-text btn-text--danger"
+                          onClick={() => removeKhachHang(item.MaKhachHang)}
+                          disabled={loading}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+
+            {!khachHangList.length && (
+              <tr>
+                <td colSpan="5" className="table-empty">
+                  {loading ? "Đang tải dữ liệu..." : "Chưa có khách hàng nào"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
