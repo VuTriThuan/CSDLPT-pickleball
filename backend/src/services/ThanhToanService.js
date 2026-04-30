@@ -1,41 +1,24 @@
-const ThanhToan = require('../models/ThanhToan');
-const San = require('../models/San');
-const mongoose = require('mongoose');
+const ThanhToan = require("../models/ThanhToan");
 
-const DichVuThanhToan = {
-  // Thêm thanh toán mới
-  themThanhToanMoi: async (data) => {
-    const thanhToan = new ThanhToan(data);
-    return await thanhToan.save();
-  },
+const LichHen = require("../models/LichHen");
 
-  // Doanh thu theo chi nhánh (cross-shard aggregate)
-  layDoanhThuTheoChiNhanh: async () => {
-    return await ThanhToan.aggregate([
-      {
-        $group: {
-          _id: '$MaChiNhanh',
-          totalRevenue: { $sum: '$SoTien' },
-          count: { $sum: 1 },
-          avgRevenue: { $avg: '$SoTien' }
-        }
-      },
-      { $sort: { totalRevenue: -1 } }
-    ]);
-  },
+const createPayment = async (data) => {
+  // tạo thanh toán
+  const payment = await ThanhToan.create(data);
 
-  // Info shard distribution
-  layThongTinShard: async () => {
-    const stats = await ThanhToan.aggregate([
-      {
-        $group: {
-          _id: '$MaChiNhanh',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-    return stats.map(s => s._id);
-  }
+  // cập nhật trạng thái lịch hẹn
+  await LichHen.findOneAndUpdate(
+    {
+      MaLichHen: data.MaLichHen,
+    },
+    {
+      TrangThai: "hoan_thanh",
+    }
+  );
+
+  return payment;
 };
 
-module.exports = DichVuThanhToan;
+module.exports = {
+  createPayment,
+};

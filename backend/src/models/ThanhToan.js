@@ -16,7 +16,6 @@ const ThanhToanSchema = new mongoose.Schema(
       default: "tien_mat",
     },
     MaLichHen: { type: String, required: true },
-    MaChiNhanh: { type: String, required: true }, // Distributed shard key
   },
   { timestamps: true },
 );
