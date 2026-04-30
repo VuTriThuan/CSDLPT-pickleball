@@ -19,6 +19,29 @@ const createPayment = async (data) => {
   return payment;
 };
 
+
+const getAllPayments = async () => {
+  return await ThanhToan.find();
+};
+
+const deletePayment = async (id) => {
+  return await ThanhToan.findByIdAndDelete(id);
+};
+
+const updatePayment = async (id, data) => {
+  return await ThanhToan.findByIdAndUpdate(
+    id,
+    data,
+    {
+      new: true,
+    }
+  );
+};
+
+
 module.exports = {
   createPayment,
+  getAllPayments,
+  deletePayment,
+  updatePayment,
 };
