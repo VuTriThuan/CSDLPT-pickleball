@@ -14,6 +14,7 @@ const app = express();
 const khachHangRoutes = require("./routes/khachHang.js");
 const revenueRoutes = require("./routes/revenue");
 const lichHenRoutes = require("./routes/lichHen");
+const thanhToanRoutes = require("./routes/thanhToan");
 
 /**
  * =============================
@@ -22,7 +23,7 @@ const lichHenRoutes = require("./routes/lichHen");
  */
 app.use(
   cors({
-    origin: "http://localhost:5174", // frontend
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   }),
 );
@@ -75,6 +76,7 @@ app.use("/api/san", sanRoutes);
 app.use("/api/san", khachHangRoutes);
 app.use("/api/revenue", revenueRoutes);
 app.use("/api/lich-hen", lichHenRoutes);
+app.use("/api/thanh-toan", thanhToanRoutes);
 
 /**
  * =============================

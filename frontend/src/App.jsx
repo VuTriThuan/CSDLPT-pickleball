@@ -4,6 +4,7 @@ import FormDatSan from "./components/FormDatSan";
 import LichSuDatSan from "./components/LichSuDatSan";
 import ModalBill from "./components/ModalBill";
 import BranchSelect from "./components/BranchSelect";
+import ThanhToanPanel from "./components/ThanhToanPanel";
 import { useAuth } from "./context/AuthContext";
 import {
   createKhachHang,
@@ -30,6 +31,7 @@ const ADMIN_TABS = [
   { key: "lich", label: "Lịch đặt" },
   { key: "san", label: "Quản lý sân" },
   { key: "khach", label: "Khách hàng" },
+  { key: "thanh-toan", label: "Thanh Toán" },
   { key: "doanhthu", label: "Doanh thu" },
 ];
 
@@ -1040,7 +1042,7 @@ export default function App() {
               <FormDatSan onSuccess={setBillData} />
             )}
             {!isManagementRole && userTab === "lich" && <LichSuDatSan />}
-            {isManagementRole && manageTab === "lich" && (
+          {isManagementRole && manageTab === "lich" && (
               <LichHenPanel auth={adminAuth} setToast={setToast} />
             )}
             {isManagementRole && manageTab === "san" && (
@@ -1048,6 +1050,13 @@ export default function App() {
             )}
             {isManagementRole && manageTab === "khach" && (
               <KhachHangPanel auth={adminAuth} setToast={setToast} />
+            )}
+            {isManagementRole && manageTab === "thanh-toan" && (
+              <ThanhToanPanel
+                auth={adminAuth}
+                setToast={setToast}
+                selectedBranch={selectedBranch}
+              />
             )}
             {isManagementRole && manageTab === "doanhthu" && (
               <RevenuePanel auth={adminAuth} setToast={setToast} />

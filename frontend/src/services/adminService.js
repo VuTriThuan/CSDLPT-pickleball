@@ -1,5 +1,6 @@
 const API = "http://localhost:5000/api/san";
 const REVENUE_API = "http://localhost:5000/api/revenue";
+const THANH_TOAN_API = "http://localhost:5000/api/thanh-toan";
 
 const authHeaders = (auth = {}) => ({
   "Content-Type": "application/json",
@@ -92,5 +93,35 @@ export const getRevenueAllBranches = (auth) =>
 
 export const getTotalRevenue = (auth) =>
   requestJson(withBranchQuery(`${REVENUE_API}/total`, auth?.branchId), {
+    headers: authHeaders(auth),
+  });
+
+export const getThanhToanList = (auth) =>
+  requestJson(withBranchQuery(THANH_TOAN_API, auth?.branchId), {
+    headers: authHeaders(auth),
+  });
+
+export const getThanhToanLichHen = (branchId, auth) =>
+  requestJson(`${THANH_TOAN_API}/lich-hen/${branchId}`, {
+    headers: authHeaders(auth),
+  });
+
+export const createThanhToan = (payload, auth) =>
+  requestJson(THANH_TOAN_API, {
+    method: "POST",
+    headers: authHeaders(auth),
+    body: JSON.stringify(payload),
+  });
+
+export const updateThanhToan = (maThanhToan, payload, auth) =>
+  requestJson(`${THANH_TOAN_API}/${maThanhToan}`, {
+    method: "PUT",
+    headers: authHeaders(auth),
+    body: JSON.stringify(payload),
+  });
+
+export const deleteThanhToan = (maThanhToan, auth) =>
+  requestJson(`${THANH_TOAN_API}/${maThanhToan}`, {
+    method: "DELETE",
     headers: authHeaders(auth),
   });
