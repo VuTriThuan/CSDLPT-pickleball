@@ -21,6 +21,10 @@ function AddPaymentPage() {
   // số tiền
   const [amount, setAmount] = useState("");
 
+  // phương thức thanh toán
+  const [paymentMethod, setPaymentMethod] =
+    useState("tien_mat");
+
   // thông báo thành công
   const [successMessage, setSuccessMessage] =
     useState("");
@@ -91,9 +95,11 @@ function AddPaymentPage() {
 
           SoTien: Number(amount),
 
+          // mặc định thành công
           TrangThai: "thanh_cong",
 
-          PhuongThuc: "tien_mat",
+          // phương thức được chọn
+          PhuongThuc: paymentMethod,
 
           MaLichHen: selectedAppointment,
         }
@@ -115,6 +121,8 @@ function AddPaymentPage() {
       setSelectedAppointment("");
 
       setAmount("");
+
+      setPaymentMethod("tien_mat");
 
       // reload trang sau 1s
       setTimeout(() => {
@@ -211,33 +219,72 @@ function AddPaymentPage() {
               fontSize: "15px",
             }}
           />
-
-          {/* thông báo thành công */}
-          {successMessage && (
-            <p
-              style={{
-                color: "#27ae60",
-                marginTop: "10px",
-                fontWeight: "bold",
-              }}
-            >
-              {successMessage}
-            </p>
-          )}
-
-          {/* thông báo lỗi */}
-          {errorMessage && (
-            <p
-              style={{
-                color: "red",
-                marginTop: "10px",
-                fontWeight: "bold",
-              }}
-            >
-              {errorMessage}
-            </p>
-          )}
         </div>
+
+        {/* phương thức thanh toán */}
+        <div style={{ marginBottom: "20px" }}>
+          <label>
+            Phương thức thanh toán
+          </label>
+
+          <br />
+          <br />
+
+          <select
+            value={paymentMethod}
+            onChange={(e) =>
+              setPaymentMethod(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "12px",
+              borderRadius: "10px",
+              border: "1px solid #dcdcdc",
+              fontSize: "15px",
+              backgroundColor: "white",
+              cursor: "pointer",
+            }}
+          >
+            <option value="tien_mat">
+              Tiền mặt
+            </option>
+
+            <option value="chuyen_khoan">
+              Chuyển khoản
+            </option>
+
+            <option value="the">
+              Thẻ
+            </option>
+          </select>
+        </div>
+
+        {/* thông báo */}
+        {successMessage && (
+          <p
+            style={{
+              color: "#27ae60",
+              marginBottom: "15px",
+              fontWeight: "bold",
+            }}
+          >
+            {successMessage}
+          </p>
+        )}
+
+        {errorMessage && (
+          <p
+            style={{
+              color: "red",
+              marginBottom: "15px",
+              fontWeight: "bold",
+            }}
+          >
+            {errorMessage}
+          </p>
+        )}
 
         {/* button */}
         <button
