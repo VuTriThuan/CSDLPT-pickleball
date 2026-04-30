@@ -3,6 +3,7 @@ import AuthPage from "./components/AuthPage";
 import FormDatSan from "./components/FormDatSan";
 import LichSuDatSan from "./components/LichSuDatSan";
 import ModalBill from "./components/ModalBill";
+import BranchSelect from "./components/BranchSelect";
 import { useAuth } from "./context/AuthContext";
 import {
   createKhachHang,
@@ -11,7 +12,9 @@ import {
   deleteSan,
   getKhachHangList,
   getLichHenList,
+  getRevenueAllBranches,
   getSanList,
+  getTotalRevenue,
   updateKhachHang,
   updateLichHen,
   updateSan,
@@ -27,6 +30,7 @@ const ADMIN_TABS = [
   { key: "lich", label: "Lịch đặt" },
   { key: "san", label: "Quản lý sân" },
   { key: "khach", label: "Khách hàng" },
+  { key: "doanhthu", label: "Doanh thu" },
 ];
 
 const ROLE_LABELS = {
@@ -70,7 +74,9 @@ const tabsForRole = (role) => {
 
 const cleanPayload = (payload) =>
   Object.fromEntries(
-    Object.entries(payload).filter(([, value]) => value !== "" && value != null),
+    Object.entries(payload).filter(
+      ([, value]) => value !== "" && value != null,
+    ),
   );
 
 const formatPrice = (value) =>
@@ -91,7 +97,7 @@ function SanPanel({ auth, setToast }) {
   const loadSan = async () => {
     setLoading(true);
     try {
-      const res = await getSanList();
+      const res = await getSanList(auth);
       setSanList(res.data || []);
     } catch (err) {
       setToast({ type: "error", msg: err.message });
@@ -102,7 +108,7 @@ function SanPanel({ auth, setToast }) {
 
   useEffect(() => {
     loadSan();
-  }, []);
+  }, [auth.role, auth.branchId]);
 
   const setNew = (key, value) =>
     setNewForm((current) => ({ ...current, [key]: value }));
@@ -254,17 +260,19 @@ function SanPanel({ auth, setToast }) {
               </select>
             </div>
             <div className="form-field form-field--wide">
-              <label className="form-label">Shard / Mã chi nhánh</label>
-              <input
-                className="form-input"
+              <label className="form-label">Chi nhánh</label>
+              <BranchSelect
                 value={newForm.MaChiNhanh}
                 onChange={(e) => setNew("MaChiNhanh", e.target.value)}
-                placeholder="VD: CN001"
               />
             </div>
           </div>
           <div className="admin-form-actions">
-            <button className="btn btn--primary" onClick={addSan} disabled={loading}>
+            <button
+              className="btn btn--primary"
+              onClick={addSan}
+              disabled={loading}
+            >
               Thêm
             </button>
             <button
@@ -287,6 +295,7 @@ function SanPanel({ auth, setToast }) {
             <tr>
               <th>ID</th>
               <th>Tên sân</th>
+              <th>Chi nhánh</th>
               <th>Giá/giờ</th>
               <th>Trạng thái</th>
               <th>Hành động</th>
@@ -308,6 +317,17 @@ function SanPanel({ auth, setToast }) {
                       />
                     ) : (
                       san.TenSan
+                    )}
+                  </td>
+                  <td>
+                    {isEditing ? (
+                      <BranchSelect
+                        value={editForm.MaChiNhanh}
+                        onChange={(e) => setEdit("MaChiNhanh", e.target.value)}
+                        mode="select"
+                      />
+                    ) : (
+                      san.MaChiNhanh
                     )}
                   </td>
                   <td>
@@ -337,7 +357,9 @@ function SanPanel({ auth, setToast }) {
                         ))}
                       </select>
                     ) : (
-                      <span className={`status-badge status-badge--${san.TrangThai}`}>
+                      <span
+                        className={`status-badge status-badge--${san.TrangThai}`}
+                      >
                         {statusLabel(san.TrangThai)}
                       </span>
                     )}
@@ -384,7 +406,7 @@ function SanPanel({ auth, setToast }) {
 
             {!sanList.length && (
               <tr>
-                <td colSpan="5" className="table-empty">
+                <td colSpan="6" className="table-empty">
                   {loading ? "Đang tải dữ liệu..." : "Chưa có sân nào"}
                 </td>
               </tr>
@@ -425,7 +447,7 @@ function LichHenPanel({ auth, setToast }) {
 
   useEffect(() => {
     loadLichHen();
-  }, [auth.role]);
+  }, [auth.role, auth.branchId]);
 
   const saveStatus = async (maLichHen, TrangThai) => {
     setLoading(true);
@@ -447,11 +469,7 @@ function LichHenPanel({ auth, setToast }) {
   const savePaymentStatus = async (maLichHen, TrangThaiThanhToan) => {
     setLoading(true);
     try {
-      const res = await updateLichHen(
-        maLichHen,
-        { TrangThaiThanhToan },
-        auth,
-      );
+      const res = await updateLichHen(maLichHen, { TrangThaiThanhToan }, auth);
       setLichHenList((current) =>
         current.map((item) =>
           item.MaLichHen === maLichHen
@@ -507,10 +525,7 @@ function LichHenPanel({ auth, setToast }) {
                         className="table-input"
                         value={item.thanhToan.TrangThai}
                         onChange={(event) =>
-                          savePaymentStatus(
-                            item.MaLichHen,
-                            event.target.value,
-                          )
+                          savePaymentStatus(item.MaLichHen, event.target.value)
                         }
                         disabled={loading}
                       >
@@ -627,7 +642,9 @@ function KhachHangPanel({ auth, setToast }) {
         auth,
       );
       setKhachHangList((current) =>
-        current.map((item) => (item.MaKhachHang === maKhachHang ? res.data : item)),
+        current.map((item) =>
+          item.MaKhachHang === maKhachHang ? res.data : item,
+        ),
       );
       setEditingId(null);
       setToast({ type: "ok", msg: "Đã sửa khách hàng" });
@@ -711,7 +728,11 @@ function KhachHangPanel({ auth, setToast }) {
             </div>
           </div>
           <div className="admin-form-actions">
-            <button className="btn btn--primary" onClick={addKhachHang} disabled={loading}>
+            <button
+              className="btn btn--primary"
+              onClick={addKhachHang}
+              disabled={loading}
+            >
               Thêm
             </button>
             <button
@@ -833,21 +854,114 @@ function KhachHangPanel({ auth, setToast }) {
   );
 }
 
+function RevenuePanel({ auth, setToast }) {
+  const [branchRevenue, setBranchRevenue] = useState([]);
+  const [totalRevenue, setTotalRevenue] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadRevenue = async () => {
+    setLoading(true);
+    try {
+      const resAll = await getRevenueAllBranches(auth);
+      const resTotal = await getTotalRevenue(auth);
+      setBranchRevenue(resAll.data || []);
+      setTotalRevenue(resTotal.data || null);
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRevenue();
+  }, [auth.role, auth.branchId]);
+
+  return (
+    <div className="admin-panel">
+      <div className="admin-toolbar">
+        <div>
+          <h2 className="admin-title">Doanh thu</h2>
+          <p className="admin-subtitle">
+            {auth.branchId
+              ? `Tổng hợp doanh thu chi nhánh ${auth.branchId}`
+              : "Tổng hợp doanh thu chi nhánh và toàn hệ thống"}
+          </p>
+        </div>
+      </div>
+
+      <div className="admin-summary">
+        <div className="summary-card">
+          <div className="summary-card__label">
+            {auth.branchId
+              ? `Tổng doanh thu chi nhánh ${auth.branchId}`
+              : "Tổng doanh thu toàn hệ thống"}
+          </div>
+          <div className="summary-card__value">
+            {totalRevenue
+              ? formatPrice(totalRevenue.TongTatCaChiNhanh)
+              : loading
+                ? "Đang tải..."
+                : "0 ₫"}
+          </div>
+        </div>
+      </div>
+
+      <div className="table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Chi nhánh</th>
+              <th>Doanh thu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {branchRevenue.map((item, index) => (
+              <tr key={item._id || index}>
+                <td className="admin-table__id">{item._id || "Không rõ"}</td>
+                <td>{formatPrice(item.TongDoanhThu)}</td>
+              </tr>
+            ))}
+
+            {!branchRevenue.length && (
+              <tr>
+                <td colSpan="2" className="table-empty">
+                  {loading ? "Đang tải dữ liệu..." : "Chưa có doanh thu"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, loading: authLoading, dangXuat } = useAuth();
   const [userTab, setUserTab] = useState("dat");
   const [manageTab, setManageTab] = useState("san");
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [billData, setBillData] = useState(null);
   const [toast, setToast] = useState(null);
   const isManagementRole = MANAGE_ROLES.includes(user?.role);
   const tabs = tabsForRole(user?.role);
   const activeTab = isManagementRole ? manageTab : userTab;
+
+  useEffect(() => {
+    if (user?.role === "admin") {
+      setSelectedBranch("");
+    } else if (user) {
+      setSelectedBranch(user?.MaChiNhanh || user?.maChiNhanh || "");
+    }
+  }, [user]);
+
   const adminAuth = useMemo(
     () => ({
       role: user?.role,
-      branchId: user?.MaChiNhanh || user?.maChiNhanh || "CN001",
+      branchId: selectedBranch === "" ? "" : selectedBranch,
     }),
-    [user],
+    [user, selectedBranch],
   );
 
   if (authLoading) {
@@ -871,9 +985,7 @@ export default function App() {
           <div className="app-header__icon"></div>
           <h1 className="app-header__title">Pickleball Court</h1>
           <p className="app-header__sub">
-            {isManagementRole
-              ? ROLE_LABELS[user.role]
-              : "Đặt sân & Thanh toán"}
+            {isManagementRole ? ROLE_LABELS[user.role] : "Đặt sân & Thanh toán"}
           </p>
           <div className="auth-actions">
             <span className="auth-actions__user">
@@ -904,6 +1016,25 @@ export default function App() {
             ))}
           </nav>
 
+          {isManagementRole && manageTab !== "khach" && (
+            <div
+              className="form-grid"
+              style={{ gap: "16px", margin: "16px 0" }}
+            >
+              <div
+                className="form-field form-field--wide"
+                style={{ marginLeft: "30px" }}
+              >
+                <label className="form-label">Chi nhánh</label>
+                <BranchSelect
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  includeAll
+                />
+              </div>
+            </div>
+          )}
+
           <div className="card__body">
             {!isManagementRole && userTab === "dat" && (
               <FormDatSan onSuccess={setBillData} />
@@ -918,6 +1049,9 @@ export default function App() {
             {isManagementRole && manageTab === "khach" && (
               <KhachHangPanel auth={adminAuth} setToast={setToast} />
             )}
+            {isManagementRole && manageTab === "doanhthu" && (
+              <RevenuePanel auth={adminAuth} setToast={setToast} />
+            )}
           </div>
         </div>
 
@@ -927,7 +1061,10 @@ export default function App() {
       <ModalBill data={billData} onClose={() => setBillData(null)} />
 
       {toast && (
-        <div className={`toast toast--${toast.type}`} onClick={() => setToast(null)}>
+        <div
+          className={`toast toast--${toast.type}`}
+          onClick={() => setToast(null)}
+        >
           {toast.msg}
         </div>
       )}

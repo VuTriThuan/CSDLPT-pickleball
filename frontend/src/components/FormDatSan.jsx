@@ -1,10 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Toast from "./Toast";
-import {
-  getChiNhanh,
-  getSanTrong,
-  postDatSan,
-} from "../services/datSanService";
+import BranchSelect from "./BranchSelect";
+import { getSanTrong, postDatSan } from "../services/datSanService";
 import { tinhSoGio, formatCurrency, PHUONG_THUC } from "../services/utils";
 
 export default function FormDatSan({ onSuccess }) {
@@ -18,7 +15,6 @@ export default function FormDatSan({ onSuccess }) {
     maSan: "",
     phuongThucThanhToan: "tien_mat",
   });
-  const [chiNhanhs, setChiNhanhs] = useState([]);
   const [sanTrong, setSanTrong] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -28,14 +24,11 @@ export default function FormDatSan({ onSuccess }) {
     setForm((f) => ({ ...f, [k]: v, ...(k !== "maSan" && { maSan: "" }) }));
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  // Load danh sách chi nhánh 1 lần
-  useEffect(() => {
-    getChiNhanh()
-      .then(setChiNhanhs)
-      .catch(() => {});
-  }, []);
-
   const handleTimSan = async () => {
+    if (!form.maChiNhanh) {
+      setToast({ msg: "Vui lòng chọn chi nhánh", type: "error" });
+      return;
+    }
     if (!form.ngayDat || !form.gioBatDau || !form.gioKetThuc) return;
     setSearching(true);
     setSanTrong([]);
@@ -113,18 +106,10 @@ export default function FormDatSan({ onSuccess }) {
         </div>
         <div className="form-field">
           <label className="form-label">Chi nhánh</label>
-          <select
-            className="form-input"
+          <BranchSelect
             value={form.maChiNhanh}
             onChange={(e) => set("maChiNhanh", e.target.value)}
-          >
-            <option value="">-- Tất cả chi nhánh --</option>
-            {chiNhanhs.map((cn) => (
-              <option key={cn.MaChiNhanh} value={cn.MaChiNhanh}>
-                {cn.TenChiNhanh} (Shard {cn.ShardId})
-              </option>
-            ))}
-          </select>
+          />
         </div>
         <div className="form-field">
           <label className="form-label">Giờ bắt đầu</label>

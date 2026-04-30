@@ -5,29 +5,12 @@ const ThanhToan = require("../models/ThanhToan");
 const San = require("../models/San");
 const KhachHang = require("../models/KhachHang");
 
-const withSession = (query, session) => (session ? query.session(session) : query);
-
-const isTransactionUnsupportedError = (error) => {
-  const message = error?.message || "";
-  return (
-    message.includes("Transaction numbers are only allowed") ||
-    message.includes("replica set member or mongos") ||
-    message.includes("Transaction not supported")
-  );
+const tinhSoGio = (bat, ket) => {
+  const [h1, m1] = bat.split(":").map(Number);
+  const [h2, m2] = ket.split(":").map(Number);
+  return (h2 * 60 + m2 - h1 * 60 - m1) / 60;
 };
 
-/**
- * Tính số giờ giữa gioBatDau và gioKetThuc (dạng "HH:MM")
- */
-const tinhSoGio = (gioBatDau, gioKetThuc) => {
-  const [h1, m1] = gioBatDau.split(":").map(Number);
-  const [h2, m2] = gioKetThuc.split(":").map(Number);
-  return (h2 * 60 + m2 - (h1 * 60 + m1)) / 60;
-};
-
-/**
- * Kiểm tra xung đột lịch hẹn
- */
 const kiemTraXungDot = async (
   maSan,
   ngayDat,
@@ -37,26 +20,29 @@ const kiemTraXungDot = async (
 ) => {
   const ngay = new Date(ngayDat);
   ngay.setHours(0, 0, 0, 0);
-  const ngayTiepTheo = new Date(ngay);
-  ngayTiepTheo.setDate(ngayTiepTheo.getDate() + 1);
+  const next = new Date(ngay);
+  next.setDate(next.getDate() + 1);
 
-  const xungDot = await withSession(
-    LichHen.findOne({
-      MaSan: maSan,
-      NgayDat: { $gte: ngay, $lt: ngayTiepTheo },
-      TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
-      $or: [
-        { GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } },
-      ],
-    }),
-    session,
-  );
-
-  return !!xungDot;
+  return LichHen.findOne({
+    MaSan: maSan,
+    NgayDat: { $gte: ngay, $lt: next },
+    TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
+    $or: [{ GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } }],
+  }).session(session);
 };
 
 /**
- * Đặt sân + tạo thanh toán. Dùng transaction nếu MongoDB hỗ trợ replica set.
+ * ============================================================
+ * DISTRIBUTED TRANSACTION: Đặt sân + Thanh toán
+ * ------------------------------------------------------------
+ * Đây là 2-phase commit do MongoDB driver quản lý:
+ *   Phase 1 (Prepare): ghi LICH_HEN + THANH_TOAN vào write-set
+ *   Phase 2 (Commit):  atomically flush cả hai collection
+ *
+ * Nếu LICH_HEN và THANH_TOAN nằm trên 2 shard khác nhau
+ * (do shard key khác nhau), MongoDB sẽ tự động thực hiện
+ * cross-shard transaction thông qua mongos router.
+ * ============================================================
  */
 const datSanVaThanhToan = async ({
   maSan,
@@ -66,43 +52,45 @@ const datSanVaThanhToan = async ({
   gioKetThuc,
   phuongThucThanhToan = "tien_mat",
 }) => {
-  const execute = async (session) => {
-    // 1. Kiểm tra sân tồn tại và đang hoạt động
-    const san = await withSession(
-      San.findOne({
-        MaSan: maSan,
-        TrangThai: "hoat_dong",
-      }),
+  const session = await mongoose.startSession();
+  session.startTransaction({
+    readConcern: { level: "snapshot" }, // đọc snapshot nhất quán
+    writeConcern: { w: "majority" }, // ghi majority để đảm bảo durability
+  });
+
+  try {
+    // ── Bước 1: Đọc từ shard chứa sân (shard key: MaSan) ────────────
+    const san = await San.findOne({
+      MaSan: maSan,
+      TrangThai: "hoat_dong",
+    }).session(session);
+    if (!san) throw new Error("Sân không tồn tại hoặc đang bảo trì");
+
+    // ── Bước 2: Đọc từ shard chứa khách hàng ────────────────────────
+    const kh = await KhachHang.findOne({ MaKhachHang: maKhachHang }).session(
       session,
     );
-    if (!san) throw new Error("Sân không tồn tại hoặc không hoạt động");
+    if (!kh) throw new Error("Tài khoản khách hàng không hợp lệ");
 
-    // 2. Kiểm tra khách hàng
-    const khachHang = await withSession(
-      KhachHang.findOne({
-        MaKhachHang: maKhachHang,
-      }),
-      session,
-    );
-    if (!khachHang) throw new Error("Khách hàng không tồn tại");
-
-    // 3. Kiểm tra xung đột lịch
-    const coXungDot = await kiemTraXungDot(
+    // ── Bước 3: Kiểm tra xung đột lịch (cùng shard với LICH_HEN) ────
+    const xungDot = await kiemTraXungDot(
       maSan,
       ngayDat,
       gioBatDau,
       gioKetThuc,
       session,
     );
-    if (coXungDot) throw new Error("Sân đã được đặt trong khung giờ này");
+    if (xungDot) throw new Error("Sân đã được đặt trong khung giờ này");
 
-    // 4. Tính tiền
+    // ── Bước 4: Tính tiền ─────────────────────────────────────────────
     const soGio = tinhSoGio(gioBatDau, gioKetThuc);
-    if (soGio <= 0) throw new Error("Thời gian không hợp lệ");
+    if (soGio <= 0) throw new Error("Khung giờ không hợp lệ");
     const soTien = soGio * san.GiaTheoGio;
 
-    // 5. Tạo lịch hẹn
     const maLichHen = "LH-" + uuidv4().slice(0, 8).toUpperCase();
+    const maThanhToan = "TT-" + uuidv4().slice(0, 8).toUpperCase();
+
+    // ── Bước 5: INSERT LICH_HEN (shard theo MaSan) ───────────────────
     const [lichHen] = await LichHen.create(
       [
         {
@@ -116,11 +104,11 @@ const datSanVaThanhToan = async ({
           MaSan: maSan,
         },
       ],
-      session ? { session } : undefined,
+      { session },
     );
 
-    // 6. Tạo thanh toán
-    const maThanhToan = "TT-" + uuidv4().slice(0, 8).toUpperCase();
+    // ── Bước 6: INSERT THANH_TOAN (shard theo MaLichHen) ─────────────
+    // Đây là điểm cross-shard nếu MaLichHen hash khác shard với MaSan
     const [thanhToan] = await ThanhToan.create(
       [
         {
@@ -132,8 +120,12 @@ const datSanVaThanhToan = async ({
           MaLichHen: maLichHen,
         },
       ],
-      session ? { session } : undefined,
+      { session },
     );
+
+    // ── Commit: 2PC flush cả hai collection ──────────────────────────
+    await session.commitTransaction();
+    session.endSession();
 
     return {
       success: true,
@@ -142,107 +134,132 @@ const datSanVaThanhToan = async ({
       soGio,
       soTien,
       tenSan: san.TenSan,
-      tenKhachHang: khachHang.HoTen,
+      tenKhachHang: kh.HoTen,
     };
-  };
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const result = await execute(session);
-    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
     session.endSession();
-    return result;
-  } catch (error) {
-    if (session.inTransaction()) await session.abortTransaction();
-    session.endSession();
-    if (isTransactionUnsupportedError(error)) return execute();
-    throw error;
+    throw err;
   }
 };
 
 /**
- * Hủy lịch hẹn + hoàn tiền (transaction)
+ * DISTRIBUTED TRANSACTION: Hủy lịch + Hoàn tiền
+ * Cập nhật đồng thời 2 collection trên (có thể) 2 shard khác nhau
  */
-const huyLichHenVaHoanTien = async (maLichHen) => {
-  const execute = async (session) => {
-    const lichHen = await withSession(
-      LichHen.findOne({ MaLichHen: maLichHen }),
+const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
+  const session = await mongoose.startSession();
+  session.startTransaction({ writeConcern: { w: "majority" } });
+
+  try {
+    const lichHen = await LichHen.findOne({ MaLichHen: maLichHen }).session(
       session,
     );
     if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
-    if (lichHen.TrangThai === "da_huy") {
+    if (lichHen.MaKhachHang !== maKhachHangYeuCau)
+      throw new Error("Không có quyền hủy lịch này");
+    if (lichHen.TrangThai === "da_huy")
       throw new Error("Lịch hẹn đã được hủy trước đó");
-    }
-    if (lichHen.TrangThai === "hoan_thanh") {
-      throw new Error("Không thể hủy lịch hẹn đã hoàn thành");
-    }
+    if (lichHen.TrangThai === "hoan_thanh")
+      throw new Error("Không thể hủy lịch đã hoàn thành");
 
-    await withSession(
-      LichHen.updateOne({ MaLichHen: maLichHen }, { TrangThai: "da_huy" }),
-      session,
+    await LichHen.updateOne(
+      { MaLichHen: maLichHen },
+      { TrangThai: "da_huy" },
+      { session },
     );
 
-    await withSession(
-      ThanhToan.updateOne(
-        { MaLichHen: maLichHen, TrangThai: "thanh_cong" },
-        { TrangThai: "hoan_tien" },
-      ),
-      session,
+    await ThanhToan.updateOne(
+      { MaLichHen: maLichHen, TrangThai: "thanh_cong" },
+      { TrangThai: "hoan_tien" },
+      { session },
     );
 
-    return { success: true, message: "Hủy lịch hẹn và hoàn tiền thành công" };
-  };
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const result = await execute(session);
     await session.commitTransaction();
     session.endSession();
-    return result;
-  } catch (error) {
-    if (session.inTransaction()) await session.abortTransaction();
+
+    return { success: true, message: "Hủy lịch hẹn và hoàn tiền thành công" };
+  } catch (err) {
+    await session.abortTransaction();
     session.endSession();
-    if (isTransactionUnsupportedError(error)) return execute();
-    throw error;
+    throw err;
   }
 };
 
-/**
- * Lấy danh sách sân còn trống theo ngày + giờ
- */
 const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
+  if (!maChiNhanh) {
+    throw new Error("Phải chọn chi nhánh để đảm bảo shard routing");
+  }
+
   const ngay = new Date(ngayDat);
   ngay.setHours(0, 0, 0, 0);
-  const ngayTiepTheo = new Date(ngay);
-  ngayTiepTheo.setDate(ngayTiepTheo.getDate() + 1);
+  const next = new Date(ngay);
+  next.setDate(next.getDate() + 1);
 
-  const lichHenXungDot = await LichHen.find({
-    NgayDat: { $gte: ngay, $lt: ngayTiepTheo },
+  // ── Bước 1: Lấy tất cả MaSan hoạt động của chi nhánh (single-shard query) ────
+  const sanChinhanh = await San.find({
+    MaChiNhanh: maChiNhanh,
+    TrangThai: "hoat_dong",
+  }).select("MaSan TenSan GiaTheoGio");
+
+  const maSanChiNhanh = sanChinhanh.map((s) => s.MaSan);
+
+  if (maSanChiNhanh.length === 0) {
+    return [];
+  }
+
+  // ── Bước 2: Query LICH_HEN chỉ trong scope MaSan của chi nhánh (scope xuống) ────
+  const xungDot = await LichHen.find({
+    MaSan: { $in: maSanChiNhanh },
+    NgayDat: { $gte: ngay, $lt: next },
     TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
     $or: [{ GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } }],
   }).select("MaSan");
 
-  const maSanBan = lichHenXungDot.map((l) => l.MaSan);
+  const maSanBan = xungDot.map((l) => l.MaSan);
 
-  const sanFilter = {
-    MaSan: { $nin: maSanBan },
-    TrangThai: "hoat_dong",
-  };
-
-  if (maChiNhanh) sanFilter.MaChiNhanh = maChiNhanh;
-
-  const sanTrong = await San.find(sanFilter);
-
-  return sanTrong;
+  // ── Bước 3: Lọc ra sân trống ────
+  return sanChinhanh.filter((s) => !maSanBan.includes(s.MaSan));
 };
 
-/**
- * Lấy lịch sử đặt sân của khách hàng
- */
+const layLichSuKhachHang = async (maKhachHang, page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+
+  const items = await LichHen.find({ MaKhachHang: maKhachHang })
+    .sort({ ThoiDiemTao: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const data = await Promise.all(
+    items.map(async (lh) => {
+      const [thanhToan, san] = await Promise.all([
+        ThanhToan.findOne({ MaLichHen: lh.MaLichHen }),
+        San.findOne({ MaSan: lh.MaSan }),
+      ]);
+
+      return {
+        ...lh.toObject(),
+        thanhToan,
+        tenSan: san?.TenSan,
+        maChiNhanh: san?.MaChiNhanh,
+      };
+    }),
+  );
+
+  const total = await LichHen.countDocuments({
+    MaKhachHang: maKhachHang,
+  });
+
+  return {
+    items: data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
 const layLichSuDatSan = async (maKhachHang, page = 1, limit = 10) => {
   const skip = (page - 1) * limit;
 
@@ -263,7 +280,6 @@ const layLichSuDatSan = async (maKhachHang, page = 1, limit = 10) => {
 
   return { data: result, total, page, limit };
 };
-
 module.exports = {
   datSanVaThanhToan,
   huyLichHenVaHoanTien,

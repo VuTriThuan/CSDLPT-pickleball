@@ -12,7 +12,7 @@ const fetchJSON = async (url, options = {}) => {
 };
 
 export const getChiNhanh = () =>
-  fetchJSON(`${API}/chi-nhanh`).then((d) => d.data);
+  fetchJSON(`${API}/chi-nhanh/chi-nhanh`).then((d) => d.data);
 
 export const getSanTrong = (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
   const q = new URLSearchParams({ ngayDat, gioBatDau, gioKetThuc });

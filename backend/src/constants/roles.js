@@ -33,7 +33,11 @@ const ROLE_PERMISSIONS = {
 };
 
 const normalizeRole = (role) =>
-  ROLE_ALIASES[String(role || "").trim().toLowerCase()] || null;
+  ROLE_ALIASES[
+    String(role || "")
+      .trim()
+      .toLowerCase()
+  ] || null;
 
 const getPermissionsForRole = (role) =>
   ROLE_PERMISSIONS[normalizeRole(role)] || [];

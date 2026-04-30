@@ -73,6 +73,18 @@ const requirePermission =
 
     next();
   };
+const authenticateDemoUser = (req, res, next) => {
+  // ví dụ: gán user demo
+  if (!req.session.user) {
+    req.session.user = {
+      role: "user",
+      MaKhachHang: "KH001",
+      maKhachHang: "KH001",
+      hoTen: "Demo User",
+    };
+  }
+  next();
+};
 
 module.exports = {
   attachUser,
@@ -82,4 +94,5 @@ module.exports = {
   hasRole,
   isSystemManager,
   isBranchUser,
+  authenticateDemoUser,
 };

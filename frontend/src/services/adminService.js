@@ -1,4 +1,5 @@
 const API = "http://localhost:5000/api/san";
+const REVENUE_API = "http://localhost:5000/api/revenue";
 
 const authHeaders = (auth = {}) => ({
   "Content-Type": "application/json",
@@ -16,7 +17,16 @@ const requestJson = async (url, options = {}) => {
   return data;
 };
 
-export const getSanList = () => requestJson(API);
+const withBranchQuery = (url, branchId) => {
+  if (!branchId) return url;
+  const params = new URLSearchParams({ branchId });
+  return `${url}?${params.toString()}`;
+};
+
+export const getSanList = (auth) =>
+  requestJson(withBranchQuery(API, auth?.branchId), {
+    headers: authHeaders(auth),
+  });
 
 export const createSan = (payload, auth) =>
   requestJson(API, {
@@ -39,7 +49,7 @@ export const deleteSan = (maSan, auth) =>
   });
 
 export const getLichHenList = (auth) =>
-  requestJson(`${API}/quan-ly/lich-hen`, {
+  requestJson(withBranchQuery(`${API}/quan-ly/lich-hen`, auth?.branchId), {
     headers: authHeaders(auth),
   });
 
@@ -72,5 +82,15 @@ export const updateKhachHang = (maKhachHang, payload, auth) =>
 export const deleteKhachHang = (maKhachHang, auth) =>
   requestJson(`${API}/quan-ly/khach-hang/${maKhachHang}`, {
     method: "DELETE",
+    headers: authHeaders(auth),
+  });
+
+export const getRevenueAllBranches = (auth) =>
+  requestJson(withBranchQuery(REVENUE_API, auth?.branchId), {
+    headers: authHeaders(auth),
+  });
+
+export const getTotalRevenue = (auth) =>
+  requestJson(withBranchQuery(`${REVENUE_API}/total`, auth?.branchId), {
     headers: authHeaders(auth),
   });

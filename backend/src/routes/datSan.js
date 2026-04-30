@@ -31,8 +31,13 @@ const pickDefined = (source, fields) =>
 
 const cleanPayload = (payload) =>
   Object.fromEntries(
-    Object.entries(payload).filter(([, value]) => value !== "" && value != null),
+    Object.entries(payload).filter(
+      ([, value]) => value !== "" && value != null,
+    ),
   );
+
+const getSelectedBranchId = (req) =>
+  req.query.branchId || req.get("x-branch-id") || "";
 
 const normalizeSanPayload = (body) =>
   cleanPayload({
@@ -87,9 +92,11 @@ const deleteSanForUser = async (req) => {
  * - admin: quan ly san va khach hang
  */
 
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const san = await San.find().sort({ MaSan: 1 });
+    const branchId = getSelectedBranchId(req);
+    const filter = branchId ? { MaChiNhanh: branchId } : {};
+    const san = await San.find(filter).sort({ MaSan: 1 });
     res.json({ success: true, data: san });
   } catch (err) {
     sendError(res, err);
@@ -117,6 +124,12 @@ router.post(
 router.get("/trong", async (req, res) => {
   try {
     const { maChiNhanh, ngayDat, gioBatDau, gioKetThuc } = req.query;
+    if (!maChiNhanh) {
+      return res.status(400).json({
+        success: false,
+        message: "Chi nhánh là bắt buộc (cho sharding)",
+      });
+    }
     if (!ngayDat || !gioBatDau || !gioKetThuc) {
       return res.status(400).json({
         success: false,
@@ -131,7 +144,7 @@ router.get("/trong", async (req, res) => {
     );
     res.json({ success: true, data: sanTrong });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(400).json({ success: false, message: err.message });
   }
 });
 
@@ -142,23 +155,37 @@ router.get("/trong", async (req, res) => {
  */
 router.post("/dat-san", requireAuth, async (req, res) => {
   try {
-    const {
-      gioBatDau,
-      gioKetThuc,
-      maSan,
-      ngayDat,
-      phuongThucThanhToan,
-    } = req.body;
+    const { gioBatDau, gioKetThuc, maSan, ngayDat, phuongThucThanhToan } =
+      req.body;
     const maKhachHang =
       req.user?.MaKhachHang ||
       req.session?.user?.maKhachHang ||
       req.session?.user?.MaKhachHang ||
       req.body.maKhachHang;
 
-    if (!maSan || !maKhachHang || !ngayDat || !gioBatDau || !gioKetThuc) {
+    // Detailed validation with specific error messages
+    if (!maSan) {
       return res
         .status(400)
-        .json({ success: false, message: "Thiếu thông tin đặt sân" });
+        .json({ success: false, message: "Vui lòng chọn sân" });
+    }
+    if (!ngayDat) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Vui lòng chọn ngày đặt" });
+    }
+    if (!gioBatDau || !gioKetThuc) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn giờ bắt đầu và kết thúc",
+      });
+    }
+    if (!maKhachHang) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "Chưa đăng nhập hoặc phiên làm việc đã hết hạn. Vui lòng đăng nhập lại",
+      });
     }
     const result = await datSanVaThanhToan({
       gioBatDau,
@@ -181,7 +208,14 @@ router.post("/dat-san", requireAuth, async (req, res) => {
  */
 router.post("/dat-san/huy/:maLichHen", requireAuth, async (req, res) => {
   try {
-    const result = await huyLichHenVaHoanTien(req.params.maLichHen);
+    const maKhachHang =
+      req.user?.MaKhachHang ||
+      req.session?.user?.maKhachHang ||
+      req.session?.user?.MaKhachHang;
+    const result = await huyLichHenVaHoanTien(
+      req.params.maLichHen,
+      maKhachHang,
+    );
     res.json(result);
   } catch (err) {
     console.error("ERROR:", err.message);
@@ -242,14 +276,25 @@ router.get(
   requirePermission(PERMISSIONS.LICH_HEN_MANAGE),
   async (req, res) => {
     try {
-      const lichHen = await LichHen.find().sort({ ThoiDiemTao: -1 });
+      const branchId = getSelectedBranchId(req);
+      const sanFilter = branchId ? { MaChiNhanh: branchId } : {};
+      const sanList = await San.find(sanFilter).select(
+        "MaSan TenSan MaChiNhanh",
+      );
+      const sanById = new Map(sanList.map((san) => [san.MaSan, san]));
+      const lichHenFilter = branchId
+        ? { MaSan: { $in: sanList.map((san) => san.MaSan) } }
+        : {};
+      const lichHen = await LichHen.find(lichHenFilter).sort({
+        ThoiDiemTao: -1,
+      });
       const data = await Promise.all(
         lichHen.map(async (item) => {
-          const [san, khachHang, thanhToan] = await Promise.all([
-            San.findOne({ MaSan: item.MaSan }),
+          const [khachHang, thanhToan] = await Promise.all([
             KhachHang.findOne({ MaKhachHang: item.MaKhachHang }),
             ThanhToan.findOne({ MaLichHen: item.MaLichHen }),
           ]);
+          const san = sanById.get(item.MaSan);
 
           return {
             ...item.toObject(),
@@ -274,7 +319,9 @@ router.put(
   requirePermission(PERMISSIONS.LICH_HEN_MANAGE),
   async (req, res) => {
     try {
-      const lichHen = await LichHen.findOne({ MaLichHen: req.params.maLichHen });
+      const lichHen = await LichHen.findOne({
+        MaLichHen: req.params.maLichHen,
+      });
       if (!lichHen) {
         return res
           .status(404)
