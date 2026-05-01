@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import AuthPage from "./components/AuthPage";
+import AuthPageBranch from "./components/AuthPageBranch";
 import FormDatSan from "./components/FormDatSan";
 import LichSuDatSan from "./components/LichSuDatSan";
 import ModalBill from "./components/ModalBill";
@@ -56,7 +57,12 @@ export default function App() {
     );
   }
 
-  if (!user) return <AuthPage />;
+  if (!user) {
+    if (window.location.pathname.startsWith("/admin")) {
+      return <AuthPageBranch />;
+    }
+    return <AuthPage />;
+  }
 
   return (
     <div className="app-wrapper">

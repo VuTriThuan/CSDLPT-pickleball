@@ -27,9 +27,9 @@ const dangKy = async ({ hoTen, soDienThoai, email, matKhau }) => {
   };
 };
 
-const dangNhap = async ({ email, matKhau }) => {
-  const kh = await KhachHang.findOne({ Email: email }).select("+MatKhau");
-  if (!kh) throw new Error("Email không tồn tại");
+const dangNhap = async ({ soDienThoai, matKhau }) => {
+  const kh = await KhachHang.findOne({ SoDienThoai: soDienThoai }).select("+MatKhau");
+  if (!kh) throw new Error("Số điện thoại không tồn tại");
 
   const ok = await kh.kiemTraMatKhau(matKhau);
   if (!ok) throw new Error("Mật khẩu không đúng");

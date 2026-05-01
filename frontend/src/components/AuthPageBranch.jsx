@@ -2,8 +2,9 @@ import { useState } from "react";
 import { postDangNhap, postDangKy } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import Toast from "./Toast";
+import BranchSelect from "./BranchSelect";
 
-export default function AuthPage() {
+export default function AuthPageBranch() {
   const { dangNhapThanhCong } = useAuth();
   const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
@@ -15,6 +16,7 @@ export default function AuthPage() {
     email: "",
     matKhau: "",
     xacNhanMatKhau: "",
+    chiNhanh: "",
   });
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -50,12 +52,14 @@ export default function AuthPage() {
         const user = await postDangNhap({
           soDienThoai: form.soDienThoai,
           matKhau: form.matKhau,
+          maChiNhanh: form.chiNhanh,
         });
         dangNhapThanhCong(user);
       } else {
         const user = await postDangNhap({
           soDienThoai: form.soDienThoai,
           matKhau: form.matKhau,
+          maChiNhanh: form.chiNhanh,
         });
         dangNhapThanhCong(user);
       }
@@ -135,6 +139,17 @@ export default function AuthPage() {
                   onKeyDown={(e) =>
                     e.key === "Enter" && mode === "login" && handleSubmit()
                   }
+                />
+              </div>
+            )}
+
+            {mode === "login" && (
+              <div className="form-field" style={{ marginBottom: 14 }}>
+                <label className="form-label">Chi nhánh</label>
+                <BranchSelect
+                  value={form.chiNhanh}
+                  onChange={(e) => set("chiNhanh", e.target.value)}
+                  includeAll={false}
                 />
               </div>
             )}

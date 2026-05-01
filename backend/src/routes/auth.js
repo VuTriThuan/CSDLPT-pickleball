@@ -29,13 +29,13 @@ router.post("/dang-ky", async (req, res) => {
 // POST /api/auth/dang-nhap
 router.post("/dang-nhap", async (req, res) => {
   try {
-    const { email, matKhau } = req.body;
-    if (!email || !matKhau)
+    const { soDienThoai, matKhau } = req.body;
+    if (!soDienThoai || !matKhau)
       return res
         .status(400)
         .json({ success: false, message: "Thiếu email hoặc mật khẩu" });
 
-    const user = await dangNhap({ email, matKhau });
+    const user = await dangNhap({ soDienThoai, matKhau });
 
     req.session.user = user;
 
