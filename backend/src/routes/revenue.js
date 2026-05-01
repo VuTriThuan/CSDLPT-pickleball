@@ -17,6 +17,17 @@ const getSelectedBranchId = (req) => {
   return req.query.branchId || req.get("x-branch-id") || "";
 };
 
+const assertCanViewBranchRevenue = (req, branchId) => {
+  if (
+    req.user?.role === "quan_ly_chi_nhanh" &&
+    branchId !== req.user.MaChiNhanh
+  ) {
+    const err = new Error("Khong co quyen xem doanh thu chi nhanh khac");
+    err.statusCode = 403;
+    throw err;
+  }
+};
+
 router.get(
   "/",
   requireAuth,
@@ -33,7 +44,7 @@ router.get(
       data,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(error.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -47,6 +58,7 @@ router.get(
   requirePermission(PERMISSIONS.REVENUE_VIEW),
   async (req, res) => {
   try {
+    assertCanViewBranchRevenue(req, req.params.branchId);
     const branchId = req.params.branchId;
     const data = await RevenueService.getRevenueByBranch(branchId);
 
@@ -55,7 +67,7 @@ router.get(
       data,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(error.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -80,7 +92,7 @@ router.get(
       data,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(error.statusCode || 500).json({
       success: false,
       message: error.message,
     });

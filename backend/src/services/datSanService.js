@@ -5,6 +5,15 @@ const ThanhToan = require("../models/ThanhToan");
 const San = require("../models/San");
 const KhachHang = require("../models/KhachHang");
 
+const useMongoTransactions = process.env.USE_MONGO_TRANSACTIONS === "true";
+const withSession = (query, session) => (session ? query.session(session) : query);
+
+const createOne = async (Model, payload, session) => {
+  if (!session) return Model.create(payload);
+  const [doc] = await Model.create([payload], { session });
+  return doc;
+};
+
 const tinhSoGio = (bat, ket) => {
   const [h1, m1] = bat.split(":").map(Number);
   const [h2, m2] = ket.split(":").map(Number);
@@ -23,12 +32,15 @@ const kiemTraXungDot = async (
   const next = new Date(ngay);
   next.setDate(next.getDate() + 1);
 
-  return LichHen.findOne({
-    MaSan: maSan,
-    NgayDat: { $gte: ngay, $lt: next },
-    TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
-    $or: [{ GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } }],
-  }).session(session);
+  return withSession(
+    LichHen.findOne({
+      MaSan: maSan,
+      NgayDat: { $gte: ngay, $lt: next },
+      TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
+      $or: [{ GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } }],
+    }),
+    session,
+  );
 };
 
 const datSanVaThanhToan = async ({
@@ -38,20 +50,26 @@ const datSanVaThanhToan = async ({
   gioBatDau,
   gioKetThuc,
 }) => {
-  const session = await mongoose.startSession();
-  session.startTransaction({
-    readConcern: { level: "snapshot" },
-    writeConcern: { w: "majority" },
-  });
+  const session = useMongoTransactions ? await mongoose.startSession() : null;
+  if (session) {
+    session.startTransaction({
+      readConcern: { level: "snapshot" },
+      writeConcern: { w: "majority" },
+    });
+  }
 
   try {
-    const san = await San.findOne({
-      MaSan: maSan,
-      TrangThai: "hoat_dong",
-    }).session(session);
+    const san = await withSession(
+      San.findOne({
+        MaSan: maSan,
+        TrangThai: "hoat_dong",
+      }),
+      session,
+    );
     if (!san) throw new Error("Sân không tồn tại hoặc đang bảo trì");
 
-    const kh = await KhachHang.findOne({ MaKhachHang: maKhachHang }).session(
+    const kh = await withSession(
+      KhachHang.findOne({ MaKhachHang: maKhachHang }),
       session,
     );
     if (!kh) throw new Error("Tài khoản khách hàng không hợp lệ");
@@ -72,37 +90,37 @@ const datSanVaThanhToan = async ({
     const maLichHen = "LH-" + uuidv4().slice(0, 8).toUpperCase();
     const maThanhToan = "TT-" + uuidv4().slice(0, 8).toUpperCase();
 
-    const [lichHen] = await LichHen.create(
-      [
-        {
-          MaLichHen: maLichHen,
-          NgayDat: new Date(ngayDat),
-          GioBatDau: gioBatDau,
-          GioKetThuc: gioKetThuc,
-          TrangThai: "da_xac_nhan",
-          ThoiDiemTao: new Date(),
-          MaKhachHang: maKhachHang,
-          MaSan: maSan,
-        },
-      ],
-      { session },
+    const lichHen = await createOne(
+      LichHen,
+      {
+        MaLichHen: maLichHen,
+        NgayDat: new Date(ngayDat),
+        GioBatDau: gioBatDau,
+        GioKetThuc: gioKetThuc,
+        TrangThai: "da_xac_nhan",
+        ThoiDiemTao: new Date(),
+        MaKhachHang: maKhachHang,
+        MaSan: maSan,
+      },
+      session,
     );
 
-    const [thanhToan] = await ThanhToan.create(
-      [
-        {
-          MaThanhToan: maThanhToan,
-          SoTien: soTien,
-          ThoiDiemThanhToan: new Date(),
-          TrangThai: "thanh_cong",
-          MaLichHen: maLichHen,
-        },
-      ],
-      { session },
+    const thanhToan = await createOne(
+      ThanhToan,
+      {
+        MaThanhToan: maThanhToan,
+        SoTien: soTien,
+        ThoiDiemThanhToan: new Date(),
+        TrangThai: "thanh_cong",
+        MaLichHen: maLichHen,
+      },
+      session,
     );
 
-    await session.commitTransaction();
-    session.endSession();
+    if (session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
 
     return {
       success: true,
@@ -114,18 +132,23 @@ const datSanVaThanhToan = async ({
       tenKhachHang: kh.HoTen,
     };
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     throw err;
   }
 };
 
 const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
-  const session = await mongoose.startSession();
-  session.startTransaction({ writeConcern: { w: "majority" } });
+  const session = useMongoTransactions ? await mongoose.startSession() : null;
+  if (session) {
+    session.startTransaction({ writeConcern: { w: "majority" } });
+  }
 
   try {
-    const lichHen = await LichHen.findOne({ MaLichHen: maLichHen }).session(
+    const lichHen = await withSession(
+      LichHen.findOne({ MaLichHen: maLichHen }),
       session,
     );
     if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
@@ -139,22 +162,26 @@ const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
     await LichHen.updateOne(
       { MaLichHen: maLichHen },
       { TrangThai: "da_huy" },
-      { session },
+      session ? { session } : {},
     );
 
     await ThanhToan.updateOne(
       { MaLichHen: maLichHen, TrangThai: "thanh_cong" },
       { TrangThai: "hoan_tien" },
-      { session },
+      session ? { session } : {},
     );
 
-    await session.commitTransaction();
-    session.endSession();
+    if (session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
 
     return { success: true, message: "Hủy lịch hẹn và hoàn tiền thành công" };
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     throw err;
   }
 };

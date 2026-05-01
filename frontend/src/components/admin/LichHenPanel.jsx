@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import {
+  deleteLichHen,
   getLichHenList,
   updateLichHen,
 } from "../../services/adminService";
 import { formatPrice } from "../../utils/helpers";
-
 
 export default function LichHenPanel({ auth, setToast }) {
   const [lichHenList, setLichHenList] = useState([]);
@@ -62,12 +62,31 @@ export default function LichHenPanel({ auth, setToast }) {
     }
   };
 
+  const removeLichHen = async (maLichHen) => {
+    if (!window.confirm(`Xóa lịch đặt ${maLichHen}?`)) return;
+
+    setLoading(true);
+    try {
+      await deleteLichHen(maLichHen, auth);
+      setLichHenList((current) =>
+        current.filter((item) => item.MaLichHen !== maLichHen),
+      );
+      setToast({ type: "ok", msg: "Đã xóa lịch đặt" });
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="admin-panel">
       <div className="admin-toolbar">
         <div>
           <h2 className="admin-title">Quản lý lịch đặt</h2>
-          <p className="admin-subtitle">Danh sách lịch đặt của toàn hệ thống</p>
+          <p className="admin-subtitle">
+            Danh sách lịch đặt theo quyền chi nhánh
+          </p>
         </div>
       </div>
 
@@ -82,6 +101,7 @@ export default function LichHenPanel({ auth, setToast }) {
               <th>Giờ</th>
               <th>Thanh toán</th>
               <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -129,12 +149,22 @@ export default function LichHenPanel({ auth, setToast }) {
                     <option value="hoan_thanh">Hoàn thành</option>
                   </select>
                 </td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn-text btn-text--danger"
+                    onClick={() => removeLichHen(item.MaLichHen)}
+                    disabled={loading}
+                  >
+                    Xóa
+                  </button>
+                </td>
               </tr>
             ))}
 
             {!lichHenList.length && (
               <tr>
-                <td colSpan="7" className="table-empty">
+                <td colSpan="8" className="table-empty">
                   {loading ? "Đang tải dữ liệu..." : "Chưa có lịch đặt nào"}
                 </td>
               </tr>

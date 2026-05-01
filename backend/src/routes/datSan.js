@@ -47,6 +47,29 @@ const getSelectedBranchId = (req) => {
   return req.query.branchId || req.get("x-branch-id") || "";
 };
 
+const isBranchRole = (role) =>
+  role === "nhan_vien_chi_nhanh" || role === "quan_ly_chi_nhanh";
+
+const assertCanManageLichHen = async (user, lichHen) => {
+  const san = await San.findOne({ MaSan: lichHen.MaSan }).select(
+    "MaSan MaChiNhanh",
+  );
+
+  if (!san) {
+    const err = new Error("Khong tim thay san cua lich hen");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (isBranchRole(user?.role) && san.MaChiNhanh !== user.MaChiNhanh) {
+    const err = new Error("Khong co quyen thao tac lich hen cua chi nhanh khac");
+    err.statusCode = 403;
+    throw err;
+  }
+
+  return san;
+};
+
 const normalizeSanPayload = (body) =>
   cleanPayload({
     MaSan: body.MaSan || body.maSan,
@@ -318,6 +341,8 @@ router.put(
           .json({ success: false, message: "Không tìm thấy lịch hẹn" });
       }
 
+      await assertCanManageLichHen(req.user, lichHen);
+
       const lichHenPayload = pickDefined(req.body, ["TrangThai"]);
       const thanhToanPayload = pickDefined(req.body, ["TrangThaiThanhToan"]);
 
@@ -339,6 +364,34 @@ router.put(
       ]);
 
       res.json({ success: true, data: { ...updated.toObject(), thanhToan } });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.delete(
+  "/quan-ly/lich-hen/:maLichHen",
+  requireAuth,
+  requirePermission(PERMISSIONS.LICH_HEN_MANAGE),
+  async (req, res) => {
+    try {
+      const lichHen = await LichHen.findOne({
+        MaLichHen: req.params.maLichHen,
+      });
+      if (!lichHen) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Khong tim thay lich hen" });
+      }
+
+      await assertCanManageLichHen(req.user, lichHen);
+      await Promise.all([
+        LichHen.deleteOne({ MaLichHen: req.params.maLichHen }),
+        ThanhToan.deleteOne({ MaLichHen: req.params.maLichHen }),
+      ]);
+
+      res.json({ success: true, message: "Da xoa lich hen" });
     } catch (err) {
       sendError(res, err, 400);
     }

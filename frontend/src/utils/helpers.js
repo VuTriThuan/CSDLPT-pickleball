@@ -2,7 +2,7 @@ import { ADMIN_TABS, USER_TABS } from "./constants";
 
 export const tabsForRole = (role) => {
   if (role === "nhan_vien_chi_nhanh") {
-    return ADMIN_TABS.filter((tab) => ["lich"].includes(tab.key));
+    return ADMIN_TABS.filter((tab) => ["lich", "san"].includes(tab.key));
   }
 
   if (role === "quan_ly_chi_nhanh") {
