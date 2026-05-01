@@ -8,12 +8,6 @@ const KhachHangSchema = new mongoose.Schema(
     SoDienThoai: { type: String, required: true, unique: true },
     Email: { type: String, required: true, unique: true },
     MatKhau: { type: String, required: true, select: false },
-    Role: {
-      type: String,
-      enum: ["user", "admin", "khach_hang", "quan_ly_he_thong"],
-      default: "user",
-    },
-    MaChiNhanh: { type: String },
     NgayDangKy: { type: Date, default: Date.now },
   },
   { timestamps: true },

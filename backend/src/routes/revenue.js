@@ -3,11 +3,25 @@ const express = require("express");
 const router = express.Router();
 
 const RevenueService = require("../services/revenueService");
+const { requireAuth, requirePermission } = require("../middleware/auth");
+const { PERMISSIONS } = require("../constants/roles");
 
-const getSelectedBranchId = (req) =>
-  req.query.branchId || req.get("x-branch-id") || "";
+const getSelectedBranchId = (req) => {
+  if (
+    req.user?.role === "nhan_vien_chi_nhanh" ||
+    req.user?.role === "quan_ly_chi_nhanh"
+  ) {
+    return req.user.MaChiNhanh || "";
+  }
 
-router.get("/", async (req, res) => {
+  return req.query.branchId || req.get("x-branch-id") || "";
+};
+
+router.get(
+  "/",
+  requireAuth,
+  requirePermission(PERMISSIONS.REVENUE_VIEW),
+  async (req, res) => {
   try {
     const branchId = getSelectedBranchId(req);
     const data = branchId
@@ -24,9 +38,14 @@ router.get("/", async (req, res) => {
       message: error.message,
     });
   }
-});
+  },
+);
 
-router.get("/branch/:branchId", async (req, res) => {
+router.get(
+  "/branch/:branchId",
+  requireAuth,
+  requirePermission(PERMISSIONS.REVENUE_VIEW),
+  async (req, res) => {
   try {
     const branchId = req.params.branchId;
     const data = await RevenueService.getRevenueByBranch(branchId);
@@ -41,9 +60,14 @@ router.get("/branch/:branchId", async (req, res) => {
       message: error.message,
     });
   }
-});
+  },
+);
 
-router.get("/total", async (req, res) => {
+router.get(
+  "/total",
+  requireAuth,
+  requirePermission(PERMISSIONS.REVENUE_VIEW),
+  async (req, res) => {
   try {
     const branchId = getSelectedBranchId(req);
     const data = (await RevenueService.getTotalRevenue(branchId)) || {
@@ -61,6 +85,7 @@ router.get("/total", async (req, res) => {
       message: error.message,
     });
   }
-});
+  },
+);
 
 module.exports = router;

@@ -8,7 +8,8 @@ class AuthorizationError extends Error {
   }
 }
 
-const isSystemManager = (actor) => actor?.role === ROLES.ADMIN;
+const isSystemManager = (actor) => actor?.role === ROLES.QUAN_LY_HE_THONG;
+const isBranchManager = (actor) => actor?.role === ROLES.QUAN_LY_CHI_NHANH;
 
 const assertAuthenticated = (actor) => {
   if (!actor?.role) throw new AuthorizationError("Chưa xác thực người dùng");
@@ -17,14 +18,17 @@ const assertAuthenticated = (actor) => {
 const assertCanManageSan = (actor, maChiNhanh) => {
   assertAuthenticated(actor);
   if (isSystemManager(actor)) return;
+  if (isBranchManager(actor) && actor.MaChiNhanh === maChiNhanh) return;
 
-  throw new AuthorizationError("Chỉ admin mới được thêm/sửa/xóa sân");
+  throw new AuthorizationError(
+    "Chỉ quản lý chi nhánh hoặc quản lý hệ thống mới được thêm/sửa/xóa sân",
+  );
 };
 
 const assertCanManageKhachHang = (actor) => {
   assertAuthenticated(actor);
   if (isSystemManager(actor)) return;
-  throw new AuthorizationError("Chỉ admin mới được quản lý khách hàng");
+  throw new AuthorizationError("Chỉ quản lý hệ thống mới được quản lý khách hàng");
 };
 
 module.exports = {

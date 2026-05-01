@@ -12,11 +12,20 @@ export const ADMIN_TABS = [
 ];
 
 export const ROLE_LABELS = {
+  khach_hang: "Khách hàng",
+  nhan_vien_chi_nhanh: "Nhân viên chi nhánh",
+  quan_ly_chi_nhanh: "Quản lý chi nhánh",
+  quan_ly_he_thong: "Quản lý hệ thống",
   user: "Khách hàng",
   admin: "Quản lý hệ thống",
 };
 
-export const MANAGE_ROLES = ["admin"];
+export const MANAGE_ROLES = [
+  "nhan_vien_chi_nhanh",
+  "quan_ly_chi_nhanh",
+  "quan_ly_he_thong",
+  "admin",
+];
 
 export const ACTIONS = [
   { key: "create", label: "Thêm" },

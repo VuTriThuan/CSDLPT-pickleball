@@ -35,9 +35,17 @@ const enrichThanhToanData = async (thanhToanList) => {
   );
 };
 
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  requireAuth,
+  requirePermission(PERMISSIONS.THANH_TOAN_MANAGE),
+  async (req, res) => {
   try {
-    const { branchId } = req.query;
+    const branchId =
+      req.user?.role === "nhan_vien_chi_nhanh" ||
+      req.user?.role === "quan_ly_chi_nhanh"
+        ? req.user.MaChiNhanh
+        : req.query.branchId;
     let thanhToanList = [];
 
     if (branchId) {
@@ -63,9 +71,14 @@ router.get("/", async (req, res) => {
   } catch (err) {
     sendError(res, err);
   }
-});
+  },
+);
 
-router.get("/lich-hen/:branchId", async (req, res) => {
+router.get(
+  "/lich-hen/:branchId",
+  requireAuth,
+  requirePermission(PERMISSIONS.THANH_TOAN_MANAGE),
+  async (req, res) => {
   try {
     const { branchId } = req.params;
 
@@ -92,12 +105,13 @@ router.get("/lich-hen/:branchId", async (req, res) => {
   } catch (err) {
     sendError(res, err);
   }
-});
+  },
+);
 
 router.post(
   "/",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE),
+  requirePermission(PERMISSIONS.THANH_TOAN_MANAGE),
   async (req, res) => {
     try {
       const thanhToan = await ThanhToan.create(req.body);
@@ -112,7 +126,7 @@ router.post(
 router.put(
   "/:maThanhToan",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE),
+  requirePermission(PERMISSIONS.THANH_TOAN_MANAGE),
   async (req, res) => {
     try {
       const thanhToan = await ThanhToan.findOne({
@@ -141,7 +155,7 @@ router.put(
 router.delete(
   "/:maThanhToan",
   requireAuth,
-  requirePermission(PERMISSIONS.SAN_MANAGE),
+  requirePermission(PERMISSIONS.THANH_TOAN_MANAGE),
   async (req, res) => {
     try {
       const thanhToan = await ThanhToan.findOne({

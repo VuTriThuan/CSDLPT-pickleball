@@ -30,7 +30,13 @@ export default function App() {
   const activeTab = isManagementRole ? manageTab : userTab;
 
   useEffect(() => {
-    if (user?.role === "admin") {
+    if (isManagementRole && tabs.length && !tabs.some((tab) => tab.key === manageTab)) {
+      setManageTab(tabs[0].key);
+    }
+  }, [isManagementRole, tabs, manageTab]);
+
+  useEffect(() => {
+    if (user?.role === "quan_ly_he_thong" || user?.role === "admin") {
       setSelectedBranch("");
     } else if (user) {
       setSelectedBranch(user?.MaChiNhanh || user?.maChiNhanh || "");
@@ -102,7 +108,9 @@ export default function App() {
             ))}
           </nav>
 
-          {isManagementRole && manageTab !== "khach" && (
+          {isManagementRole &&
+            manageTab !== "khach" &&
+            (user?.role === "quan_ly_he_thong" || user?.role === "admin") && (
             <div
               className="form-grid"
               style={{ gap: "16px", margin: "16px 0" }}

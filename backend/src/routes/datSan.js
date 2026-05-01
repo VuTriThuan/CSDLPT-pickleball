@@ -36,8 +36,16 @@ const cleanPayload = (payload) =>
     ),
   );
 
-const getSelectedBranchId = (req) =>
-  req.query.branchId || req.get("x-branch-id") || "";
+const getSelectedBranchId = (req) => {
+  if (
+    req.user?.role === "nhan_vien_chi_nhanh" ||
+    req.user?.role === "quan_ly_chi_nhanh"
+  ) {
+    return req.user.MaChiNhanh || "";
+  }
+
+  return req.query.branchId || req.get("x-branch-id") || "";
+};
 
 const normalizeSanPayload = (body) =>
   cleanPayload({

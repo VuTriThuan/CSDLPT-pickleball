@@ -39,7 +39,7 @@ const requireAuth = (req, res, next) => {
 const requireAdmin = (req, res, next) => {
   if (!req.user) return requireAuth(req, res, next);
 
-  if (req.user.role !== ROLES.ADMIN) {
+  if (req.user.role !== ROLES.QUAN_LY_HE_THONG) {
     return res.status(403).json({
       success: false,
       message: "Không có quyền truy cập",
@@ -50,8 +50,9 @@ const requireAdmin = (req, res, next) => {
 };
 
 const hasRole = (user, role) => user?.role === role;
-const isSystemManager = (user) => hasRole(user, ROLES.ADMIN);
-const isBranchUser = () => false;
+const isSystemManager = (user) => hasRole(user, ROLES.QUAN_LY_HE_THONG);
+const isBranchUser = (user) =>
+  [ROLES.NHAN_VIEN_CHI_NHANH, ROLES.QUAN_LY_CHI_NHANH].includes(user?.role);
 
 const requirePermission =
   (...permissions) =>
@@ -73,16 +74,8 @@ const requirePermission =
 
     next();
   };
-const authenticateDemoUser = (req, res, next) => {
-  // ví dụ: gán user demo
-  if (!req.session.user) {
-    req.session.user = {
-      role: "user",
-      MaKhachHang: "KH001",
-      maKhachHang: "KH001",
-      hoTen: "Demo User",
-    };
-  }
+
+const authenticateDemoUser = (_req, _res, next) => {
   next();
 };
 

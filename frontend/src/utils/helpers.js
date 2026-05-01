@@ -1,7 +1,17 @@
 import { ADMIN_TABS, USER_TABS } from "./constants";
 
 export const tabsForRole = (role) => {
-  if (role === "admin") return ADMIN_TABS;
+  if (role === "nhan_vien_chi_nhanh") {
+    return ADMIN_TABS.filter((tab) => ["lich"].includes(tab.key));
+  }
+
+  if (role === "quan_ly_chi_nhanh") {
+    return ADMIN_TABS.filter((tab) =>
+      ["lich", "san", "doanhthu"].includes(tab.key),
+    );
+  }
+
+  if (role === "quan_ly_he_thong" || role === "admin") return ADMIN_TABS;
   return USER_TABS;
 };
 

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const KhachHang = require("./models/KhachHang");
+const NhanVien = require("./models/NhanVien");
 const San = require("./models/San");
 const LichHen = require("./models/LichHen");
 const ThanhToan = require("./models/ThanhToan");
@@ -13,86 +14,113 @@ const seedData = async () => {
     await LichHen.deleteMany({});
     await San.deleteMany({});
     await KhachHang.deleteMany({});
+    await NhanVien.deleteMany({});
 
-    console.log("🗑️ Đã xóa dữ liệu cũ");
+    console.log("Da xoa du lieu cu");
 
-    const kh1 = new KhachHang({
-      MaKhachHang: "KH001",
-      HoTen: "Nguyen Van A",
-      SoDienThoai: "0900000001",
-      Email: "a@gmail.com",
-      MatKhau: "123456",
-      Role: "khach_hang",
-    });
+    await KhachHang.create([
+      {
+        MaKhachHang: "KH001",
+        HoTen: "Nguyen Van A",
+        SoDienThoai: "0900000001",
+        Email: "a@gmail.com",
+        MatKhau: "123456",
+      },
+      {
+        MaKhachHang: "KH002",
+        HoTen: "Tran Van B",
+        SoDienThoai: "0900000002",
+        Email: "b@gmail.com",
+        MatKhau: "123456",
+      },
+    ]);
 
-    const kh2 = new KhachHang({
-      MaKhachHang: "KH002",
-      HoTen: "Tran Van B",
-      SoDienThoai: "0900000002",
-      Email: "b@gmail.com",
-      MatKhau: "123456",
-      Role: "khach_hang",
-    });
+    console.log("Da tao khach hang");
 
-    const admin = new KhachHang({
-      MaKhachHang: "ADMIN001",
-      HoTen: "Admin System",
-      SoDienThoai: "0999999999",
-      Email: "admin@gmail.com",
-      MatKhau: "123456",
-      Role: "admin",
-      MaChiNhanh: "HA_DONG",
-    });
+    await NhanVien.create([
+      {
+        MaNhanVien: "NV_HK_01",
+        HoTen: "Nhan vien Hoan Kiem",
+        SoDienThoai: "0910000001",
+        ChucVu: "nhan_vien_chi_nhanh",
+        MaChiNhanh: "HOAN_KIEM",
+        MatKhau: "123456",
+      },
+      {
+        MaNhanVien: "QL_HK_01",
+        HoTen: "Quan ly Hoan Kiem",
+        SoDienThoai: "0910000002",
+        ChucVu: "quan_ly_chi_nhanh",
+        MaChiNhanh: "HOAN_KIEM",
+        MatKhau: "123456",
+      },
+      {
+        MaNhanVien: "NV_CG_01",
+        HoTen: "Nhan vien Cau Giay",
+        SoDienThoai: "0910000003",
+        ChucVu: "nhan_vien_chi_nhanh",
+        MaChiNhanh: "CAU_GIAY",
+        MatKhau: "123456",
+      },
+      {
+        MaNhanVien: "QL_CG_01",
+        HoTen: "Quan ly Cau Giay",
+        SoDienThoai: "0910000004",
+        ChucVu: "quan_ly_chi_nhanh",
+        MaChiNhanh: "CAU_GIAY",
+        MatKhau: "123456",
+      },
+      {
+        MaNhanVien: "ADMIN_SYS",
+        HoTen: "Quan ly he thong",
+        SoDienThoai: "0999999999",
+        ChucVu: "quan_ly_he_thong",
+        MaChiNhanh: "HOAN_KIEM",
+        MatKhau: "123456",
+      },
+    ]);
 
-    await kh1.save();
-    await kh2.save();
-    await admin.save();
-
-    console.log("Đã tạo khách hàng");
+    console.log("Da tao nhan vien");
 
     await San.insertMany([
       {
         MaSan: "SAN001",
-        TenSan: "Sân Hoàn Kiếm 1",
+        TenSan: "San Hoan Kiem 1",
         GiaTheoGio: 300000,
         TrangThai: "hoat_dong",
         MaChiNhanh: "HOAN_KIEM",
       },
-
       {
         MaSan: "SAN002",
-        TenSan: "Sân Cầu Giấy 1",
+        TenSan: "San Cau Giay 1",
         GiaTheoGio: 250000,
         TrangThai: "hoat_dong",
         MaChiNhanh: "CAU_GIAY",
       },
-
       {
         MaSan: "SAN003",
-        TenSan: "Sân Ba Đình 1",
+        TenSan: "San Ba Dinh 1",
         GiaTheoGio: 280000,
         TrangThai: "hoat_dong",
         MaChiNhanh: "BA_DINH",
       },
-
       {
         MaSan: "SAN004",
-        TenSan: "Sân Thanh Xuân 1",
+        TenSan: "San Thanh Xuan 1",
         GiaTheoGio: 320000,
         TrangThai: "hoat_dong",
         MaChiNhanh: "THANH_XUAN",
       },
-
       {
         MaSan: "SAN005",
-        TenSan: "Sân Long Biên 1",
+        TenSan: "San Long Bien 1",
         GiaTheoGio: 350000,
         TrangThai: "hoat_dong",
         MaChiNhanh: "LONG_BIEN",
       },
     ]);
 
-    console.log("Đã tạo sân");
+    console.log("Da tao san");
 
     await LichHen.insertMany([
       {
@@ -104,7 +132,6 @@ const seedData = async () => {
         MaKhachHang: "KH001",
         MaSan: "SAN001",
       },
-
       {
         MaLichHen: "LH002",
         NgayDat: new Date(),
@@ -114,7 +141,6 @@ const seedData = async () => {
         MaKhachHang: "KH002",
         MaSan: "SAN002",
       },
-
       {
         MaLichHen: "LH003",
         NgayDat: new Date(),
@@ -124,7 +150,6 @@ const seedData = async () => {
         MaKhachHang: "KH001",
         MaSan: "SAN003",
       },
-
       {
         MaLichHen: "LH004",
         NgayDat: new Date(),
@@ -134,7 +159,6 @@ const seedData = async () => {
         MaKhachHang: "KH002",
         MaSan: "SAN004",
       },
-
       {
         MaLichHen: "LH005",
         NgayDat: new Date(),
@@ -146,7 +170,7 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("Đã tạo lịch hẹn");
+    console.log("Da tao lich hen");
 
     await ThanhToan.insertMany([
       {
@@ -155,21 +179,18 @@ const seedData = async () => {
         TrangThai: "thanh_cong",
         MaLichHen: "LH001",
       },
-
       {
         MaThanhToan: "TT002",
         SoTien: 500000,
         TrangThai: "thanh_cong",
         MaLichHen: "LH002",
       },
-
       {
         MaThanhToan: "TT003",
         SoTien: 560000,
         TrangThai: "cho_xu_ly",
         MaLichHen: "LH003",
       },
-
       {
         MaThanhToan: "TT004",
         SoTien: 700000,
@@ -178,14 +199,12 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("Đã tạo thanh toán");
-
-    console.log("Seed dữ liệu thành công");
+    console.log("Da tao thanh toan");
+    console.log("Seed du lieu thanh cong");
 
     process.exit();
   } catch (error) {
     console.log(error);
-
     process.exit();
   }
 };
