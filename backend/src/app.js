@@ -18,7 +18,7 @@ const thanhToanRoutes = require("./routes/thanhToan");
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: ["http://localhost:5173", "http://localhost:5173"],
     credentials: true,
   }),
 );
@@ -62,13 +62,13 @@ app.get("/health", (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("❌ Error:", err.stack);
+  console.error("Error:", err.stack);
   res.status(500).json({ success: false, message: "Internal Server Error" });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`),
+  console.log(`Server running on http://localhost:${PORT}`),
 );
 
 module.exports = app;

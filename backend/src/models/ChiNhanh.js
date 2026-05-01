@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const ChiNhanhSchema = new mongoose.Schema(
   {
     MaChiNhanh: { type: String, required: true, unique: true },
+    TenChiNhanh: { type: String, required: true },
     DiaChi: { type: String },
     SoDienThoai: { type: String },
     TrangThai: {

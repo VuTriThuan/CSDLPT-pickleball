@@ -15,17 +15,10 @@ const TRANG_THAI_THANH_TOAN = [
   { value: "hoan_tien", label: "Hoàn tiền" },
 ];
 
-const PHUONG_THUC = [
-  { value: "tien_mat", label: "Tiền mặt" },
-  { value: "chuyen_khoan", label: "Chuyển khoản" },
-  { value: "the", label: "Thẻ" },
-];
-
 const initialForm = {
   MaThanhToan: "",
   SoTien: "",
   TrangThai: "thanh_cong",
-  PhuongThuc: "tien_mat",
   MaLichHen: "",
 };
 
@@ -110,7 +103,6 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
       MaThanhToan: thanhToan.MaThanhToan,
       SoTien: thanhToan.SoTien,
       TrangThai: thanhToan.TrangThai,
-      PhuongThuc: thanhToan.PhuongThuc,
       MaLichHen: thanhToan.MaLichHen,
     });
   };
@@ -123,7 +115,6 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
         {
           SoTien: editForm.SoTien ? Number(editForm.SoTien) : "",
           TrangThai: editForm.TrangThai,
-          PhuongThuc: editForm.PhuongThuc,
           MaLichHen: editForm.MaLichHen,
         },
         auth,
@@ -162,9 +153,6 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
   const statusLabel = (status) =>
     TRANG_THAI_THANH_TOAN.find((item) => item.value === status)?.label ||
     status;
-
-  const phuongThucLabel = (phuongThuc) =>
-    PHUONG_THUC.find((item) => item.value === phuongThuc)?.label || phuongThuc;
 
   const getLichHenInfo = (maLichHen) =>
     lichHenList.find((item) => item.MaLichHen === maLichHen);
@@ -224,20 +212,7 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
                 ))}
               </select>
             </div>
-            <div className="form-field">
-              <label className="form-label">Phương thức</label>
-              <select
-                className="form-input"
-                value={newForm.PhuongThuc}
-                onChange={(e) => setNew("PhuongThuc", e.target.value)}
-              >
-                {PHUONG_THUC.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+
             <div className="form-field form-field--wide">
               <label className="form-label">Lịch hẹn</label>
               <select
@@ -285,7 +260,6 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
               <th>Mã thanh toán</th>
               <th>Khách hàng</th>
               <th>Số tiền</th>
-              <th>Phương thức</th>
               <th>Trạng thái</th>
               <th>Ngày thanh toán</th>
               <th>Hành động</th>
@@ -312,23 +286,7 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
                       formatPrice(item.SoTien)
                     )}
                   </td>
-                  <td>
-                    {isEditing ? (
-                      <select
-                        className="table-input"
-                        value={editForm.PhuongThuc}
-                        onChange={(e) => setEdit("PhuongThuc", e.target.value)}
-                      >
-                        {PHUONG_THUC.map((phuong) => (
-                          <option key={phuong.value} value={phuong.value}>
-                            {phuong.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      phuongThucLabel(item.PhuongThuc)
-                    )}
-                  </td>
+
                   <td>
                     {isEditing ? (
                       <select

@@ -153,7 +153,6 @@ const seedData = async () => {
         MaThanhToan: "TT001",
         SoTien: 600000,
         TrangThai: "thanh_cong",
-        PhuongThuc: "tien_mat",
         MaLichHen: "LH001",
       },
 
@@ -161,7 +160,6 @@ const seedData = async () => {
         MaThanhToan: "TT002",
         SoTien: 500000,
         TrangThai: "thanh_cong",
-        PhuongThuc: "chuyen_khoan",
         MaLichHen: "LH002",
       },
 
@@ -169,7 +167,6 @@ const seedData = async () => {
         MaThanhToan: "TT003",
         SoTien: 560000,
         TrangThai: "cho_xu_ly",
-        PhuongThuc: "the",
         MaLichHen: "LH003",
       },
 
@@ -177,7 +174,6 @@ const seedData = async () => {
         MaThanhToan: "TT004",
         SoTien: 700000,
         TrangThai: "that_bai",
-        PhuongThuc: "tien_mat",
         MaLichHen: "LH005",
       },
     ]);

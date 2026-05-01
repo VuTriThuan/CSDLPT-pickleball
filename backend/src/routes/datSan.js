@@ -140,7 +140,7 @@ router.get("/trong", async (req, res) => {
 
 router.post("/dat-san", requireAuth, async (req, res) => {
   try {
-    const { gioBatDau, gioKetThuc, maSan, ngayDat, phuongThucThanhToan } =
+    const { gioBatDau, gioKetThuc, maSan, ngayDat } =
       req.body;
     const maKhachHang =
       req.user?.MaKhachHang ||
@@ -177,7 +177,6 @@ router.post("/dat-san", requireAuth, async (req, res) => {
       maKhachHang,
       maSan,
       ngayDat,
-      phuongThucThanhToan,
     });
     res.status(201).json(result);
   } catch (err) {

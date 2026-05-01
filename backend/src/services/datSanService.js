@@ -37,7 +37,6 @@ const datSanVaThanhToan = async ({
   ngayDat,
   gioBatDau,
   gioKetThuc,
-  phuongThucThanhToan = "tien_mat",
 }) => {
   const session = await mongoose.startSession();
   session.startTransaction({
@@ -96,7 +95,6 @@ const datSanVaThanhToan = async ({
           SoTien: soTien,
           ThoiDiemThanhToan: new Date(),
           TrangThai: "thanh_cong",
-          PhuongThuc: phuongThucThanhToan,
           MaLichHen: maLichHen,
         },
       ],

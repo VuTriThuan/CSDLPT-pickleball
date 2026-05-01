@@ -2,7 +2,7 @@ import { useState } from "react";
 import Toast from "./Toast";
 import BranchSelect from "./BranchSelect";
 import { getSanTrong, postDatSan } from "../services/datSanService";
-import { tinhSoGio, formatCurrency, PHUONG_THUC } from "../services/utils";
+import { tinhSoGio, formatCurrency } from "../services/utils";
 
 export default function FormDatSan({ onSuccess }) {
   const today = new Date().toISOString().split("T")[0];
@@ -13,7 +13,6 @@ export default function FormDatSan({ onSuccess }) {
     gioKetThuc: "10:00",
     maChiNhanh: "",
     maSan: "",
-    phuongThucThanhToan: "tien_mat",
   });
   const [sanTrong, setSanTrong] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -63,7 +62,6 @@ export default function FormDatSan({ onSuccess }) {
         ngayDat: form.ngayDat,
         gioBatDau: form.gioBatDau,
         gioKetThuc: form.gioKetThuc,
-        phuongThucThanhToan: form.phuongThucThanhToan,
       });
       onSuccess(result);
       setForm((f) => ({ ...f, maSan: "" }));
@@ -157,23 +155,6 @@ export default function FormDatSan({ onSuccess }) {
                 <div className="san-card__gia">
                   {formatCurrency(s.GiaTheoGio)}/giờ
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {selectedSan && (
-        <div className="section">
-          <label className="form-label">Phương thức thanh toán</label>
-          <div className="payment-options">
-            {PHUONG_THUC.map((p) => (
-              <div
-                key={p.value}
-                className={`payment-option${form.phuongThucThanhToan === p.value ? " payment-option--selected" : ""}`}
-                onClick={() => setField("phuongThucThanhToan", p.value)}
-              >
-                {p.label}
               </div>
             ))}
           </div>

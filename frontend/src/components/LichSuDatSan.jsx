@@ -108,9 +108,7 @@ export default function LichSuDatSan() {
                   onClick={() => handleHuy(item.MaLichHen)}
                   disabled={huying === item.MaLichHen}
                 >
-                  {huying === item.MaLichHen
-                    ? "Đang hủy..."
-                    : "🗑️ Hủy lịch & Hoàn tiền"}
+                  {huying === item.MaLichHen ? "Đang hủy..." : "Hủy lịch"}
                 </button>
               </div>
             )}

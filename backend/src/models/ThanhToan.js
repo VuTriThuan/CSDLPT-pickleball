@@ -9,11 +9,7 @@ const ThanhToanSchema = new mongoose.Schema(
       enum: ["cho_xu_ly", "thanh_cong", "that_bai", "hoan_tien"],
       default: "thanh_cong",
     },
-    PhuongThuc: {
-      type: String,
-      enum: ["tien_mat", "chuyen_khoan", "the"],
-      default: "tien_mat",
-    },
+
     MaLichHen: { type: String, required: true },
   },
   { timestamps: true },
