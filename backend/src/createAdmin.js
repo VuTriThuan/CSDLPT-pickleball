@@ -2,9 +2,7 @@ const mongoose = require("mongoose");
 
 const KhachHang = require("./models/KhachHang");
 
-mongoose.connect(
-  "mongodb://127.0.0.1:27017/pickleball_db"
-);
+mongoose.connect("mongodb://127.0.0.1:27017/pickleball_db");
 
 const createAdmin = async () => {
   try {
@@ -26,7 +24,7 @@ const createAdmin = async () => {
 
     await admin.save();
 
-    console.log("✅ Tạo admin thành công");
+    console.log("Tạo admin thành công");
 
     process.exit();
   } catch (error) {

@@ -7,7 +7,6 @@ const { assertCanManageKhachHang } = require("../services/phanQuyenService");
 
 const KhachHang = require("../models/KhachHang");
 
-// ===== UPDATE =====
 router.put(
   "/quan-ly/khach-hang/:maKhachHang",
   requireAuth,
@@ -34,7 +33,6 @@ router.put(
   },
 );
 
-// ===== DELETE =====
 router.delete(
   "/quan-ly/khach-hang/:maKhachHang",
   requireAuth,

@@ -7,7 +7,6 @@ const RevenueService = require("../services/revenueService");
 const getSelectedBranchId = (req) =>
   req.query.branchId || req.get("x-branch-id") || "";
 
-// doanh thu từng chi nhánh
 router.get("/", async (req, res) => {
   try {
     const branchId = getSelectedBranchId(req);
@@ -27,7 +26,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// doanh thu của một chi nhánh cụ thể
 router.get("/branch/:branchId", async (req, res) => {
   try {
     const branchId = req.params.branchId;
@@ -45,7 +43,6 @@ router.get("/branch/:branchId", async (req, res) => {
   }
 });
 
-// tổng doanh thu toàn hệ thống
 router.get("/total", async (req, res) => {
   try {
     const branchId = getSelectedBranchId(req);

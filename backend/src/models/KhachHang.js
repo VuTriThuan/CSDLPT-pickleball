@@ -19,14 +19,12 @@ const KhachHangSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// ✅ Hash password trước khi lưu
 KhachHangSchema.pre("save", async function () {
   if (!this.isModified("MatKhau")) return;
 
   this.MatKhau = await bcrypt.hash(this.MatKhau, 10);
 });
 
-// ✅ So sánh password
 KhachHangSchema.methods.kiemTraMatKhau = function (matKhau) {
   return bcrypt.compare(matKhau, this.MatKhau);
 };

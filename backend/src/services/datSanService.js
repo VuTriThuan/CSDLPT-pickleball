@@ -31,19 +31,6 @@ const kiemTraXungDot = async (
   }).session(session);
 };
 
-/**
- * ============================================================
- * DISTRIBUTED TRANSACTION: Đặt sân + Thanh toán
- * ------------------------------------------------------------
- * Đây là 2-phase commit do MongoDB driver quản lý:
- *   Phase 1 (Prepare): ghi LICH_HEN + THANH_TOAN vào write-set
- *   Phase 2 (Commit):  atomically flush cả hai collection
- *
- * Nếu LICH_HEN và THANH_TOAN nằm trên 2 shard khác nhau
- * (do shard key khác nhau), MongoDB sẽ tự động thực hiện
- * cross-shard transaction thông qua mongos router.
- * ============================================================
- */
 const datSanVaThanhToan = async ({
   maSan,
   maKhachHang,
@@ -54,25 +41,22 @@ const datSanVaThanhToan = async ({
 }) => {
   const session = await mongoose.startSession();
   session.startTransaction({
-    readConcern: { level: "snapshot" }, // đọc snapshot nhất quán
-    writeConcern: { w: "majority" }, // ghi majority để đảm bảo durability
+    readConcern: { level: "snapshot" },
+    writeConcern: { w: "majority" },
   });
 
   try {
-    // ── Bước 1: Đọc từ shard chứa sân (shard key: MaSan) ────────────
     const san = await San.findOne({
       MaSan: maSan,
       TrangThai: "hoat_dong",
     }).session(session);
     if (!san) throw new Error("Sân không tồn tại hoặc đang bảo trì");
 
-    // ── Bước 2: Đọc từ shard chứa khách hàng ────────────────────────
     const kh = await KhachHang.findOne({ MaKhachHang: maKhachHang }).session(
       session,
     );
     if (!kh) throw new Error("Tài khoản khách hàng không hợp lệ");
 
-    // ── Bước 3: Kiểm tra xung đột lịch (cùng shard với LICH_HEN) ────
     const xungDot = await kiemTraXungDot(
       maSan,
       ngayDat,
@@ -82,7 +66,6 @@ const datSanVaThanhToan = async ({
     );
     if (xungDot) throw new Error("Sân đã được đặt trong khung giờ này");
 
-    // ── Bước 4: Tính tiền ─────────────────────────────────────────────
     const soGio = tinhSoGio(gioBatDau, gioKetThuc);
     if (soGio <= 0) throw new Error("Khung giờ không hợp lệ");
     const soTien = soGio * san.GiaTheoGio;
@@ -90,7 +73,6 @@ const datSanVaThanhToan = async ({
     const maLichHen = "LH-" + uuidv4().slice(0, 8).toUpperCase();
     const maThanhToan = "TT-" + uuidv4().slice(0, 8).toUpperCase();
 
-    // ── Bước 5: INSERT LICH_HEN (shard theo MaSan) ───────────────────
     const [lichHen] = await LichHen.create(
       [
         {
@@ -107,8 +89,6 @@ const datSanVaThanhToan = async ({
       { session },
     );
 
-    // ── Bước 6: INSERT THANH_TOAN (shard theo MaLichHen) ─────────────
-    // Đây là điểm cross-shard nếu MaLichHen hash khác shard với MaSan
     const [thanhToan] = await ThanhToan.create(
       [
         {
@@ -123,7 +103,6 @@ const datSanVaThanhToan = async ({
       { session },
     );
 
-    // ── Commit: 2PC flush cả hai collection ──────────────────────────
     await session.commitTransaction();
     session.endSession();
 
@@ -143,10 +122,6 @@ const datSanVaThanhToan = async ({
   }
 };
 
-/**
- * DISTRIBUTED TRANSACTION: Hủy lịch + Hoàn tiền
- * Cập nhật đồng thời 2 collection trên (có thể) 2 shard khác nhau
- */
 const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
   const session = await mongoose.startSession();
   session.startTransaction({ writeConcern: { w: "majority" } });
@@ -196,7 +171,6 @@ const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
   const next = new Date(ngay);
   next.setDate(next.getDate() + 1);
 
-  // ── Bước 1: Lấy tất cả MaSan hoạt động của chi nhánh (single-shard query) ────
   const sanChinhanh = await San.find({
     MaChiNhanh: maChiNhanh,
     TrangThai: "hoat_dong",
@@ -208,7 +182,6 @@ const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
     return [];
   }
 
-  // ── Bước 2: Query LICH_HEN chỉ trong scope MaSan của chi nhánh (scope xuống) ────
   const xungDot = await LichHen.find({
     MaSan: { $in: maSanChiNhanh },
     NgayDat: { $gte: ngay, $lt: next },
@@ -218,7 +191,6 @@ const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
 
   const maSanBan = xungDot.map((l) => l.MaSan);
 
-  // ── Bước 3: Lọc ra sân trống ────
   return sanChinhanh.filter((s) => !maSanBan.includes(s.MaSan));
 };
 

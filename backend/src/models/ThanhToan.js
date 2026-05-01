@@ -1,9 +1,4 @@
 const mongoose = require("mongoose");
-
-/**
- * THANH_TOAN — shard key: MaLichHen (collocate với LICH_HEN cùng shard)
- * → Cross-shard transaction giữa LICH_HEN và THANH_TOAN được tối thiểu hóa
- */
 const ThanhToanSchema = new mongoose.Schema(
   {
     MaThanhToan: { type: String, required: true, unique: true },
@@ -19,7 +14,7 @@ const ThanhToanSchema = new mongoose.Schema(
       enum: ["tien_mat", "chuyen_khoan", "the"],
       default: "tien_mat",
     },
-    MaLichHen: { type: String, required: true }, // ← shard key
+    MaLichHen: { type: String, required: true },
   },
   { timestamps: true },
 );

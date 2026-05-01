@@ -2,7 +2,7 @@ const API = "http://localhost:5000/api/auth";
 
 const fetchJSON = async (url, options = {}) => {
   const res = await fetch(url, {
-    credentials: "include", // gửi cookie session
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     ...options,
   });

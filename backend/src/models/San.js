@@ -1,9 +1,4 @@
 const mongoose = require("mongoose");
-
-/**
- * SAN — shard key: MaChiNhanh
- * Mỗi sân thuộc 1 chi nhánh → shard tương ứng lưu toàn bộ sân của chi nhánh đó
- */
 const SanSchema = new mongoose.Schema(
   {
     MaSan: { type: String, required: true, unique: true },
@@ -14,7 +9,7 @@ const SanSchema = new mongoose.Schema(
       enum: ["hoat_dong", "bao_tri", "ngung"],
       default: "hoat_dong",
     },
-    MaChiNhanh: { type: String, required: true }, // ← shard key
+    MaChiNhanh: { type: String, required: true },
   },
   { timestamps: true },
 );

@@ -58,7 +58,6 @@ export default function FormDatSan({ onSuccess }) {
       return setToast({ msg: "Vui lòng chọn sân", type: "error" });
     setLoading(true);
     try {
-      // maKhachHang KHÔNG truyền — backend tự lấy từ session
       const result = await postDatSan({
         maSan: form.maSan,
         ngayDat: form.ngayDat,
@@ -208,7 +207,7 @@ export default function FormDatSan({ onSuccess }) {
         onClick={handleSubmit}
         disabled={loading || !form.maSan}
       >
-        {loading ? "⏳ Đang xử lý..." : "✅ Xác nhận đặt sân & Thanh toán"}
+        {loading ? "Đang xử lý..." : "Xác nhận đặt sân & Thanh toán"}
       </button>
     </div>
   );

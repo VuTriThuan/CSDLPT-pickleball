@@ -5,7 +5,7 @@ import Toast from "./Toast";
 
 export default function AuthPage() {
   const { dangNhapThanhCong } = useAuth();
-  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -47,7 +47,6 @@ export default function AuthPage() {
           matKhau: form.matKhau,
         });
         setToast({ msg: "Đăng ký thành công! Đang đăng nhập...", type: "ok" });
-        // Tự đăng nhập luôn sau khi đăng ký
         const user = await postDangNhap({
           email: form.email,
           matKhau: form.matKhau,
@@ -78,7 +77,6 @@ export default function AuthPage() {
       )}
 
       <div className="auth-container">
-        {/* Logo */}
         <div className="app-header">
           <div className="app-header__icon">🏓</div>
           <h1 className="app-header__title">Pickleball Court</h1>
@@ -86,7 +84,6 @@ export default function AuthPage() {
         </div>
 
         <div className="card">
-          {/* Tab login / register */}
           <nav className="tabs">
             <button
               className={`tab-btn${mode === "login" ? " tab-btn--active" : ""}`}
@@ -103,7 +100,6 @@ export default function AuthPage() {
           </nav>
 
           <div className="card__body">
-            {/* Trường chỉ có ở đăng ký */}
             {mode === "register" && (
               <>
                 <div className="form-field" style={{ marginBottom: 14 }}>
@@ -127,7 +123,6 @@ export default function AuthPage() {
               </>
             )}
 
-            {/* Email + password — dùng chung */}
             <div className="form-field" style={{ marginBottom: 14 }}>
               <label className="form-label">Email</label>
               <input
@@ -179,7 +174,7 @@ export default function AuthPage() {
               style={{ opacity: loading ? 0.7 : 1 }}
             >
               {loading
-                ? "⏳ Đang xử lý..."
+                ? "Đang xử lý..."
                 : mode === "login"
                   ? "Đăng nhập"
                   : "Tạo tài khoản"}

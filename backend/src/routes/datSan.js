@@ -86,12 +86,6 @@ const deleteSanForUser = async (req) => {
   await San.deleteOne({ MaSan: req.params.maSan });
 };
 
-/**
- * Rule phan quyen:
- * - user: chi thao tac du lieu ca nhan
- * - admin: quan ly san va khach hang
- */
-
 router.get("/", async (req, res) => {
   try {
     const branchId = getSelectedBranchId(req);
@@ -117,10 +111,6 @@ router.post(
   },
 );
 
-/**
- * GET /api/san/trong
- * Lấy danh sách sân trống theo ngày giờ
- */
 router.get("/trong", async (req, res) => {
   try {
     const { maChiNhanh, ngayDat, gioBatDau, gioKetThuc } = req.query;
@@ -148,11 +138,6 @@ router.get("/trong", async (req, res) => {
   }
 });
 
-/**
- * POST /api/dat-san
- * Đặt sân và thanh toán (dùng transaction)
- * Body: { maSan, maKhachHang, ngayDat, gioBatDau, gioKetThuc, phuongThucThanhToan }
- */
 router.post("/dat-san", requireAuth, async (req, res) => {
   try {
     const { gioBatDau, gioKetThuc, maSan, ngayDat, phuongThucThanhToan } =
@@ -163,7 +148,6 @@ router.post("/dat-san", requireAuth, async (req, res) => {
       req.session?.user?.MaKhachHang ||
       req.body.maKhachHang;
 
-    // Detailed validation with specific error messages
     if (!maSan) {
       return res
         .status(400)
@@ -204,7 +188,6 @@ router.post("/dat-san", requireAuth, async (req, res) => {
 
 /**
  * POST /api/dat-san/huy/:maLichHen
- * Hủy lịch hẹn + hoàn tiền (transaction)
  */
 router.post("/dat-san/huy/:maLichHen", requireAuth, async (req, res) => {
   try {

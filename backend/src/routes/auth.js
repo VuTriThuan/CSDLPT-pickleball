@@ -21,7 +21,7 @@ router.post("/dang-ky", async (req, res) => {
       .status(201)
       .json({ success: true, message: "Đăng ký thành công", data: user });
   } catch (err) {
-    console.error("❌ REGISTER ERROR:", err); // 👈 THÊM DÒNG NÀY
+    console.error("REGISTER ERROR:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 });
@@ -37,7 +37,6 @@ router.post("/dang-nhap", async (req, res) => {
 
     const user = await dangNhap({ email, matKhau });
 
-    // Lưu vào session
     req.session.user = user;
 
     res.json({ success: true, message: "Đăng nhập thành công", data: user });

@@ -16,11 +16,6 @@ const revenueRoutes = require("./routes/revenue");
 const lichHenRoutes = require("./routes/lichHen");
 const thanhToanRoutes = require("./routes/thanhToan");
 
-/**
- * =============================
- * 1. CORS (phải đặt trước routes)
- * =============================
- */
 app.use(
   cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
@@ -28,26 +23,16 @@ app.use(
   }),
 );
 
-/**
- * =============================
- * 2. Body parser
- * =============================
- */
 app.use(express.json());
 
-/**
- * =============================
- * 3. Session (QUAN TRỌNG)
- * =============================
- */
 app.use(
   session({
-    name: "connect.sid", // tên cookie
+    name: "connect.sid",
     secret: process.env.SESSION_SECRET || "my-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // dev = false (production cần https)
+      secure: false,
       httpOnly: true,
       sameSite: "lax",
     },
@@ -56,18 +41,8 @@ app.use(
 
 app.use(authenticateDemoUser);
 
-/**
- * =============================
- * 4. Connect MongoDB
- * =============================
- */
 connectDB();
 
-/**
- * =============================
- * 5. Routes
- * =============================
- */
 app.use(attachUser);
 app.use("/api/auth", authRoutes);
 app.use("/api/san", datSanRoutes);
@@ -78,11 +53,6 @@ app.use("/api/revenue", revenueRoutes);
 app.use("/api/lich-hen", lichHenRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
 
-/**
- * =============================
- * 6. Health check
- * =============================
- */
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
@@ -91,21 +61,10 @@ app.get("/health", (req, res) => {
   });
 });
 
-/**
- * =============================
- * 7. Global error handler (optional nhưng nên có)
- * =============================
- */
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.stack);
   res.status(500).json({ success: false, message: "Internal Server Error" });
 });
-
-/**
- * =============================
- * 8. Start server
- * =============================
- */
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

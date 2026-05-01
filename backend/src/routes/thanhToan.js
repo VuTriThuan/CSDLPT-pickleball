@@ -8,14 +8,12 @@ const LichHen = require("../models/LichHen");
 const San = require("../models/San");
 const KhachHang = require("../models/KhachHang");
 
-// ===== helper =====
 const sendError = (res, err, defaultStatus = 500) =>
   res.status(err.statusCode || defaultStatus).json({
     success: false,
     message: err.message,
   });
 
-// Helper populate thông tin đầy đủ cho thanh toán
 const enrichThanhToanData = async (thanhToanList) => {
   return Promise.all(
     thanhToanList.map(async (tt) => {
@@ -37,14 +35,12 @@ const enrichThanhToanData = async (thanhToanList) => {
   );
 };
 
-// ===== GET all by branch =====
 router.get("/", async (req, res) => {
   try {
     const { branchId } = req.query;
     let thanhToanList = [];
 
     if (branchId) {
-      // Lấy tất cả lịch hẹn của chi nhánh
       const lichHenList = await LichHen.find();
       const sanList = await San.find();
 
@@ -54,7 +50,6 @@ router.get("/", async (req, res) => {
       );
       const maLichHenList = filtered.map((item) => item.MaLichHen);
 
-      // Lấy thanh toán của những lịch hẹn đó
       thanhToanList = await ThanhToan.find({
         MaLichHen: { $in: maLichHenList },
       });
@@ -62,7 +57,6 @@ router.get("/", async (req, res) => {
       thanhToanList = await ThanhToan.find();
     }
 
-    // Enrich với thông tin khách hàng, sân
     const enriched = await enrichThanhToanData(thanhToanList);
 
     res.json({ success: true, data: enriched });
@@ -71,19 +65,15 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ===== GET by MaChiNhanh - lịch hẹn của chi nhánh =====
 router.get("/lich-hen/:branchId", async (req, res) => {
   try {
     const { branchId } = req.params;
 
-    // Lấy tất cả sân của chi nhánh
     const sanList = await San.find({ MaChiNhanh: branchId });
     const maSanList = sanList.map((s) => s.MaSan);
 
-    // Lấy lịch hẹn của những sân này
     const lichHenList = await LichHen.find({ MaSan: { $in: maSanList } });
 
-    // Enrich với thông tin khách hàng, sân
     const enriched = await Promise.all(
       lichHenList.map(async (lh) => {
         const khachHang = await KhachHang.findOne({
@@ -104,7 +94,6 @@ router.get("/lich-hen/:branchId", async (req, res) => {
   }
 });
 
-// ===== CREATE =====
 router.post(
   "/",
   requireAuth,
@@ -120,7 +109,6 @@ router.post(
   },
 );
 
-// ===== UPDATE =====
 router.put(
   "/:maThanhToan",
   requireAuth,
@@ -150,7 +138,6 @@ router.put(
   },
 );
 
-// ===== DELETE =====
 router.delete(
   "/:maThanhToan",
   requireAuth,

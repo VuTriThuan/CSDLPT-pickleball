@@ -4,10 +4,9 @@ import { getMe, postDangXuat } from "../services/authService";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // { maKhachHang, hoTen, email, role }
-  const [loading, setLoading] = useState(true); // kiểm tra session lúc load trang
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Khi app khởi động: hỏi backend session còn không
   useEffect(() => {
     getMe()
       .then(setUser)

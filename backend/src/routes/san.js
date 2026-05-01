@@ -9,14 +9,12 @@ const { laySanTrong } = require("../services/datSanService");
 
 const San = require("../models/San");
 
-// ===== helper giữ nguyên =====
 const sendError = (res, err, defaultStatus = 500) =>
   res.status(err.statusCode || defaultStatus).json({
     success: false,
     message: err.message,
   });
 
-// ===== GET all =====
 router.get("/", async (_req, res) => {
   try {
     const san = await San.find().sort({ MaSan: 1 });
@@ -26,7 +24,6 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// ===== CREATE =====
 router.post(
   "/",
   requireAuth,
@@ -42,7 +39,6 @@ router.post(
   },
 );
 
-// ===== UPDATE =====
 router.put(
   "/:maSan",
   requireAuth,
@@ -70,7 +66,6 @@ router.put(
   },
 );
 
-// ===== DELETE =====
 router.delete(
   "/:maSan",
   requireAuth,
@@ -93,7 +88,6 @@ router.delete(
   },
 );
 
-// ===== SÂN TRỐNG =====
 router.get("/trong", async (req, res) => {
   try {
     const { maChiNhanh, ngayDat, gioBatDau, gioKetThuc } = req.query;

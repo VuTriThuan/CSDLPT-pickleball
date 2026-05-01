@@ -5,26 +5,16 @@ const San = require("./models/San");
 const LichHen = require("./models/LichHen");
 const ThanhToan = require("./models/ThanhToan");
 
-mongoose.connect(
-  "mongodb://127.0.0.1:27017/pickleball_db"
-);
+mongoose.connect("mongodb://127.0.0.1:27017/pickleball_db");
 
 const seedData = async () => {
   try {
-    // =========================
-    // XÓA DỮ LIỆU CŨ
-    // =========================
-
     await ThanhToan.deleteMany({});
     await LichHen.deleteMany({});
     await San.deleteMany({});
     await KhachHang.deleteMany({});
 
     console.log("🗑️ Đã xóa dữ liệu cũ");
-
-    // =========================
-    // KHÁCH HÀNG
-    // =========================
 
     const kh1 = new KhachHang({
       MaKhachHang: "KH001",
@@ -58,12 +48,7 @@ const seedData = async () => {
     await kh2.save();
     await admin.save();
 
-    console.log("✅ Đã tạo khách hàng");
-
-    // =========================
-    // SÂN
-    // shard key: MaChiNhanh
-    // =========================
+    console.log("Đã tạo khách hàng");
 
     await San.insertMany([
       {
@@ -107,12 +92,7 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("✅ Đã tạo sân");
-
-    // =========================
-    // LỊCH HẸN
-    // shard key: MaSan
-    // =========================
+    console.log("Đã tạo sân");
 
     await LichHen.insertMany([
       {
@@ -166,12 +146,7 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("✅ Đã tạo lịch hẹn");
-
-    // =========================
-    // THANH TOÁN
-    // shard key: MaLichHen
-    // =========================
+    console.log("Đã tạo lịch hẹn");
 
     await ThanhToan.insertMany([
       {
@@ -207,11 +182,9 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("✅ Đã tạo thanh toán");
+    console.log("Đã tạo thanh toán");
 
-    console.log(
-      "🎉 Seed dữ liệu thành công"
-    );
+    console.log("Seed dữ liệu thành công");
 
     process.exit();
   } catch (error) {

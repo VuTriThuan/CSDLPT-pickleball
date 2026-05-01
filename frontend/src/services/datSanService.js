@@ -2,7 +2,7 @@ const API = "http://localhost:5000/api";
 
 const fetchJSON = async (url, options = {}) => {
   const res = await fetch(url, {
-    credentials: "include", // gửi cookie session theo mọi request
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     ...options,
   });
@@ -20,7 +20,6 @@ export const getSanTrong = (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
   return fetchJSON(`${API}/san/trong?${q}`).then((d) => d.data);
 };
 
-// maKhachHang KHÔNG cần truyền nữa — backend lấy từ session
 export const postDatSan = (payload) =>
   fetchJSON(`${API}/san/dat-san`, {
     method: "POST",
