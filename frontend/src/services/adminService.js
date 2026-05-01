@@ -66,13 +66,6 @@ export const getKhachHangList = (auth) =>
     headers: authHeaders(auth),
   });
 
-export const createKhachHang = (payload, auth) =>
-  requestJson(`${API}/quan-ly/khach-hang`, {
-    method: "POST",
-    headers: authHeaders(auth),
-    body: JSON.stringify(payload),
-  });
-
 export const updateKhachHang = (maKhachHang, payload, auth) =>
   requestJson(`${API}/quan-ly/khach-hang/${maKhachHang}`, {
     method: "PUT",

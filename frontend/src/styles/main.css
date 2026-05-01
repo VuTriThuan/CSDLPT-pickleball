@@ -594,6 +594,10 @@ body {
   max-width: 980px;
 }
 
+.app-inner--khach {
+  max-width: 760px;
+}
+
 .app-header {
   margin-bottom: 28px;
 }
@@ -684,6 +688,10 @@ body {
 .admin-panel {
   display: grid;
   gap: 18px;
+}
+
+.admin-panel--khach-hang .admin-toolbar {
+  justify-content: flex-start;
 }
 
 .admin-toolbar {

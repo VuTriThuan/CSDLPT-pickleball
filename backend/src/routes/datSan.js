@@ -464,7 +464,7 @@ router.delete(
   },
 );
 
-// 3. Them, sua, xoa thong tin khach hang
+// 3. xem, sua, xoa thong tin khach hang
 router.get(
   "/quan-ly/khach-hang",
   requireAuth,
@@ -474,21 +474,6 @@ router.get(
       assertCanManageKhachHang(req.user);
       const khachHang = await KhachHang.find().sort({ MaKhachHang: 1 });
       res.json({ success: true, data: khachHang });
-    } catch (err) {
-      sendError(res, err, 400);
-    }
-  },
-);
-
-router.post(
-  "/quan-ly/khach-hang",
-  requireAuth,
-  requirePermission(PERMISSIONS.KHACH_HANG_MANAGE),
-  async (req, res) => {
-    try {
-      assertCanManageKhachHang(req.user);
-      const khachHang = await KhachHang.create(req.body);
-      res.status(201).json({ success: true, data: khachHang });
     } catch (err) {
       sendError(res, err, 400);
     }
