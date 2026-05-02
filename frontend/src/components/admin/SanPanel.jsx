@@ -17,6 +17,11 @@ export default function SanPanel({ auth, setToast }) {
   const [editForm, setEditForm] = useState(initialSan);
   const [loading, setLoading] = useState(false);
 
+  const canManage =
+    auth.role === "admin" ||
+    auth.role === "quan_ly_he_thong" ||
+    auth.role === "quan_ly_chi_nhanh";
+
   const loadSan = async () => {
     setLoading(true);
     try {
@@ -128,15 +133,17 @@ export default function SanPanel({ auth, setToast }) {
           <h2 className="admin-title">Quản lý sân</h2>
           <p className="admin-subtitle">Danh sách sân theo dữ liệu API</p>
         </div>
-        <button
-          className="btn btn--primary"
-          onClick={() => setShowForm((current) => !current)}
-        >
-          Thêm sân
-        </button>
+        {canManage && (
+          <button
+            className="btn btn--primary"
+            onClick={() => setShowForm((current) => !current)}
+          >
+            Thêm sân
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {showForm && canManage && (
         <div className="admin-form-card">
           <div className="form-grid">
             <div className="form-field">
@@ -221,7 +228,7 @@ export default function SanPanel({ auth, setToast }) {
               <th>Chi nhánh</th>
               <th>Giá/giờ</th>
               <th>Trạng thái</th>
-              <th>Hành động</th>
+              {canManage && <th>Hành động</th>}
             </tr>
           </thead>
           <tbody>
@@ -287,49 +294,51 @@ export default function SanPanel({ auth, setToast }) {
                       </span>
                     )}
                   </td>
-                  <td>
-                    {isEditing ? (
-                      <div className="table-actions">
-                        <button
-                          className="btn-text btn-text--primary"
-                          onClick={() => saveEdit(san.MaSan)}
-                          disabled={loading}
-                        >
-                          Lưu
-                        </button>
-                        <button
-                          className="btn-text"
-                          onClick={() => setEditingId(null)}
-                          disabled={loading}
-                        >
-                          Hủy
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="table-actions">
-                        <button
-                          className="btn-text btn-text--primary"
-                          onClick={() => startEdit(san)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="btn-text btn-text--danger"
-                          onClick={() => removeSan(san.MaSan)}
-                          disabled={loading}
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                  {canManage && (
+                    <td>
+                      {isEditing ? (
+                        <div className="table-actions">
+                          <button
+                            className="btn-text btn-text--primary"
+                            onClick={() => saveEdit(san.MaSan)}
+                            disabled={loading}
+                          >
+                            Lưu
+                          </button>
+                          <button
+                            className="btn-text"
+                            onClick={() => setEditingId(null)}
+                            disabled={loading}
+                          >
+                            Hủy
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="table-actions">
+                          <button
+                            className="btn-text btn-text--primary"
+                            onClick={() => startEdit(san)}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            className="btn-text btn-text--danger"
+                            onClick={() => removeSan(san.MaSan)}
+                            disabled={loading}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
 
             {!sanList.length && (
               <tr>
-                <td colSpan="6" className="table-empty">
+                <td colSpan={canManage ? "6" : "5"} className="table-empty">
                   {loading ? "Đang tải dữ liệu..." : "Chưa có sân nào"}
                 </td>
               </tr>

@@ -333,8 +333,6 @@ router.put(
         "GioKetThuc",
         "TrangThai",
       ]);
-      const thanhToanPayload = pickDefined(req.body, ["TrangThaiThanhToan"]);
-
       const targetSan = lichHenPayload.MaSan
         ? await San.findOne({ MaSan: lichHenPayload.MaSan })
         : san;
@@ -415,13 +413,7 @@ router.put(
               { new: true, runValidators: true },
             )
           : Promise.resolve(lichHen),
-        thanhToanPayload.TrangThaiThanhToan
-          ? ThanhToan.findOneAndUpdate(
-              { MaLichHen: req.params.maLichHen },
-              { TrangThai: thanhToanPayload.TrangThaiThanhToan },
-              { new: true, runValidators: true },
-            )
-          : ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
+        ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
       ]);
 
       const [updatedSan, updatedKhachHang] = await Promise.all([

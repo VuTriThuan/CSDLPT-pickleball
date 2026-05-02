@@ -55,8 +55,8 @@ export default function LichHenPanel({ auth, setToast }) {
       NgayDat: formatDateInput(lichHen.NgayDat),
       GioBatDau: lichHen.GioBatDau || "",
       GioKetThuc: lichHen.GioKetThuc || "",
+      GioKetThuc: lichHen.GioKetThuc || "",
       TrangThai: lichHen.TrangThai || "cho_xac_nhan",
-      TrangThaiThanhToan: lichHen.thanhToan?.TrangThai || "",
     });
   };
 
@@ -71,7 +71,6 @@ export default function LichHenPanel({ auth, setToast }) {
           GioBatDau: editForm.GioBatDau,
           GioKetThuc: editForm.GioKetThuc,
           TrangThai: editForm.TrangThai,
-          TrangThaiThanhToan: editForm.TrangThaiThanhToan,
         }),
         auth,
       );
@@ -99,25 +98,6 @@ export default function LichHenPanel({ auth, setToast }) {
         ),
       );
       setToast({ type: "ok", msg: "Đã cập nhật lịch đặt" });
-    } catch (err) {
-      setToast({ type: "error", msg: err.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const savePaymentStatus = async (maLichHen, TrangThaiThanhToan) => {
-    setLoading(true);
-    try {
-      const res = await updateLichHen(maLichHen, { TrangThaiThanhToan }, auth);
-      setLichHenList((current) =>
-        current.map((item) =>
-          item.MaLichHen === maLichHen
-            ? { ...item, thanhToan: res.data.thanhToan }
-            : item,
-        ),
-      );
-      setToast({ type: "ok", msg: "Đã cập nhật trạng thái thanh toán" });
     } catch (err) {
       setToast({ type: "error", msg: err.message });
     } finally {
@@ -157,7 +137,7 @@ export default function LichHenPanel({ auth, setToast }) {
               <th>Sân</th>
               <th>Ngày</th>
               <th>Giờ</th>
-              <th>Thanh toán</th>
+              <th>Số tiền</th>
               <th>Trạng thái</th>
               <th>Hành động</th>
             </tr>
@@ -223,29 +203,7 @@ export default function LichHenPanel({ auth, setToast }) {
                   </td>
                   <td>
                     {item.thanhToan ? (
-                      <div className="payment-cell">
-                        <strong>{formatPrice(item.thanhToan.SoTien)}</strong>
-                        <select
-                          className="table-input"
-                          value={
-                            isEditing
-                              ? editForm.TrangThaiThanhToan
-                              : item.thanhToan.TrangThai
-                          }
-                          onChange={(event) =>
-                            isEditing
-                              ? setEdit("TrangThaiThanhToan", event.target.value)
-                              : savePaymentStatus(
-                                  item.MaLichHen,
-                                  event.target.value,
-                                )
-                          }
-                          disabled={loading}
-                        >
-                          <option value="thanh_cong">Đã thanh toán</option>
-                          <option value="cho_xu_ly">Chưa thanh toán</option>
-                        </select>
-                      </div>
+                      <strong>{formatPrice(item.thanhToan.SoTien)}</strong>
                     ) : (
                       "-"
                     )}
