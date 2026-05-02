@@ -594,6 +594,10 @@ body {
   max-width: 980px;
 }
 
+.app-inner--lich-dat {
+  max-width: 1240px;
+}
+
 .app-inner--khach {
   max-width: 760px;
 }
@@ -732,6 +736,65 @@ body {
   overflow-x: visible;
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
+}
+
+.admin-panel--lich-hen .table-wrap {
+  overflow-x: auto;
+}
+
+.admin-panel--lich-hen .admin-table {
+  min-width: 1280px;
+  table-layout: fixed;
+}
+
+.admin-panel--lich-hen .admin-table th,
+.admin-panel--lich-hen .admin-table td {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(1),
+.admin-panel--lich-hen .admin-table td:nth-child(1) {
+  width: 120px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(2),
+.admin-panel--lich-hen .admin-table td:nth-child(2) {
+  width: 150px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(3),
+.admin-panel--lich-hen .admin-table td:nth-child(3) {
+  width: 170px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(4),
+.admin-panel--lich-hen .admin-table td:nth-child(4) {
+  width: 150px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(5),
+.admin-panel--lich-hen .admin-table td:nth-child(5) {
+  width: 290px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(6),
+.admin-panel--lich-hen .admin-table td:nth-child(6) {
+  width: 180px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(7),
+.admin-panel--lich-hen .admin-table td:nth-child(7) {
+  width: 170px;
+}
+
+.admin-panel--lich-hen .admin-table th:nth-child(8),
+.admin-panel--lich-hen .admin-table td:nth-child(8) {
+  width: 130px;
+}
+
+.admin-panel--lich-hen .table-input {
+  min-width: 130px;
 }
 
 .admin-table {

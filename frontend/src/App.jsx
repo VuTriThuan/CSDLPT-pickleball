@@ -66,7 +66,11 @@ export default function App() {
 
   return (
     <div className="app-wrapper">
-      <div className="app-inner">
+      <div
+        className={`app-inner${
+          isManagementRole && manageTab === "lich" ? " app-inner--lich-dat" : ""
+        }`}
+      >
         <header className="app-header">
           <div className="app-header__icon"></div>
           <h1 className="app-header__title">Pickleball Court</h1>

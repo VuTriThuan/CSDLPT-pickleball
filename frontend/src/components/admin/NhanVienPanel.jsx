@@ -230,7 +230,7 @@ export default function NhanVienPanel({ auth, setToast }) {
                 <th>SĐT</th>
                 <th>Chức vụ</th>
                 <th>Chi nhánh</th>
-                <th className="action-col">Thao tác</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -249,22 +249,25 @@ export default function NhanVienPanel({ auth, setToast }) {
                     </span>
                   </td>
                   <td>{item.MaChiNhanh}</td>
-                  <td className="action-col">
-                    <button
-                      className="btn-icon"
-                      onClick={() => {
-                        setForm({ ...item, MatKhau: "" });
-                        setAction("update");
-                      }}
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="btn-icon btn-icon--danger"
-                      onClick={() => handleDelete(item.MaNhanVien)}
-                    >
-                      🗑️
-                    </button>
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        className="btn-text btn-text--primary"
+                        onClick={() => {
+                          setForm({ ...item, MatKhau: "" });
+                          setAction("update");
+                        }}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        className="btn-text btn-text--danger"
+                        onClick={() => handleDelete(item.MaNhanVien)}
+                        disabled={loading}
+                      >
+                        Xóa
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

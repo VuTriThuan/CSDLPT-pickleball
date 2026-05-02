@@ -325,8 +325,87 @@ router.put(
       const san = await San.findOne({ MaSan: lichHen.MaSan });
       assertCanEditOrDeleteLichHen(req.user, san?.MaChiNhanh);
 
-      const lichHenPayload = pickDefined(req.body, ["TrangThai"]);
+      const lichHenPayload = pickDefined(req.body, [
+        "MaKhachHang",
+        "MaSan",
+        "NgayDat",
+        "GioBatDau",
+        "GioKetThuc",
+        "TrangThai",
+      ]);
       const thanhToanPayload = pickDefined(req.body, ["TrangThaiThanhToan"]);
+
+      const targetSan = lichHenPayload.MaSan
+        ? await San.findOne({ MaSan: lichHenPayload.MaSan })
+        : san;
+      if (!targetSan) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy sân" });
+      }
+      if (lichHenPayload.MaSan && lichHenPayload.MaSan !== lichHen.MaSan) {
+        assertCanEditOrDeleteLichHen(req.user, targetSan.MaChiNhanh);
+      }
+
+      if (lichHenPayload.MaKhachHang) {
+        const khachHang = await KhachHang.findOne({
+          MaKhachHang: lichHenPayload.MaKhachHang,
+        });
+        if (!khachHang) {
+          return res.status(404).json({
+            success: false,
+            message: "Không tìm thấy khách hàng",
+          });
+        }
+      }
+
+      const nextNgayDat = lichHenPayload.NgayDat || lichHen.NgayDat;
+      const nextGioBatDau = lichHenPayload.GioBatDau || lichHen.GioBatDau;
+      const nextGioKetThuc = lichHenPayload.GioKetThuc || lichHen.GioKetThuc;
+      const nextMaSan = lichHenPayload.MaSan || lichHen.MaSan;
+      const batDau = nextGioBatDau.split(":").map(Number);
+      const ketThuc = nextGioKetThuc.split(":").map(Number);
+      if (
+        batDau.length !== 2 ||
+        ketThuc.length !== 2 ||
+        batDau.some((part) => Number.isNaN(part)) ||
+        ketThuc.some((part) => Number.isNaN(part)) ||
+        ketThuc[0] * 60 + ketThuc[1] <= batDau[0] * 60 + batDau[1]
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Khung giờ không hợp lệ" });
+      }
+
+      if (
+        lichHenPayload.MaSan ||
+        lichHenPayload.NgayDat ||
+        lichHenPayload.GioBatDau ||
+        lichHenPayload.GioKetThuc
+      ) {
+        const ngay = new Date(nextNgayDat);
+        ngay.setHours(0, 0, 0, 0);
+        const next = new Date(ngay);
+        next.setDate(next.getDate() + 1);
+        const xungDot = await LichHen.findOne({
+          MaLichHen: { $ne: req.params.maLichHen },
+          MaSan: nextMaSan,
+          NgayDat: { $gte: ngay, $lt: next },
+          TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
+          $or: [
+            {
+              GioBatDau: { $lt: nextGioKetThuc },
+              GioKetThuc: { $gt: nextGioBatDau },
+            },
+          ],
+        });
+        if (xungDot) {
+          return res.status(400).json({
+            success: false,
+            message: "Sân đã được đặt trong khung giờ này",
+          });
+        }
+      }
 
       const [updated, thanhToan] = await Promise.all([
         Object.keys(lichHenPayload).length
@@ -345,7 +424,21 @@ router.put(
           : ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
       ]);
 
-      res.json({ success: true, data: { ...updated.toObject(), thanhToan } });
+      const [updatedSan, updatedKhachHang] = await Promise.all([
+        San.findOne({ MaSan: updated.MaSan }),
+        KhachHang.findOne({ MaKhachHang: updated.MaKhachHang }),
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          ...updated.toObject(),
+          tenSan: updatedSan?.TenSan,
+          maChiNhanh: updatedSan?.MaChiNhanh,
+          tenKhachHang: updatedKhachHang?.HoTen,
+          thanhToan,
+        },
+      });
     } catch (err) {
       sendError(res, err, 400);
     }
