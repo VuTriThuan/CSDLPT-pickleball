@@ -8,8 +8,8 @@ const LichHenSchema = new mongoose.Schema(
     GioKetThuc: { type: String, required: true },
     TrangThai: {
       type: String,
-      enum: ["cho_xac_nhan", "da_xac_nhan", "da_huy", "hoan_thanh"],
-      default: "da_xac_nhan",
+      enum: ["Chờ xác nhận", "Hoàn thành", "Huỷ"],
+      default: "Chờ xác nhận",
     },
     ThoiDiemTao: { type: Date, default: Date.now },
     MaKhachHang: { type: String, required: true },

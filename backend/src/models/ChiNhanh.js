@@ -7,8 +7,8 @@ const ChiNhanhSchema = new mongoose.Schema(
     SoDienThoai: { type: String },
     TrangThai: {
       type: String,
-      enum: ["hoat_dong", "ngung"],
-      default: "hoat_dong",
+      enum: ["Hoạt động", "Dừng hoạt động"],
+      default: "Hoạt động",
     },
     ShardId: { type: Number, min: 1, max: 8 },
   },

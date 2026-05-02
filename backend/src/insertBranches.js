@@ -7,7 +7,7 @@ const branches = [
     TenChiNhanh: "Hoàn Kiếm",
     DiaChi: "123 Đường A, Hoàn Kiếm, Hà Nội",
     SoDienThoai: "0123456789",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 1,
   },
   {
@@ -15,7 +15,7 @@ const branches = [
     TenChiNhanh: "Cầu Giấy",
     DiaChi: "456 Đường B, Cầu Giấy, Hà Nội",
     SoDienThoai: "0987654321",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 2,
   },
   {
@@ -23,7 +23,7 @@ const branches = [
     TenChiNhanh: "Ba Đình",
     DiaChi: "789 Đường C, Ba Đình, Hà Nội",
     SoDienThoai: "0111111111",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 3,
   },
   {
@@ -31,7 +31,7 @@ const branches = [
     TenChiNhanh: "Nam Từ Liêm",
     DiaChi: "101 Đường D, Nam Từ Liêm, Hà Nội",
     SoDienThoai: "0222222222",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 4,
   },
   {
@@ -39,7 +39,7 @@ const branches = [
     TenChiNhanh: "Bắc Từ Liêm",
     DiaChi: "202 Đường E, Bắc Từ Liêm, Hà Nội",
     SoDienThoai: "0333333333",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 5,
   },
   {
@@ -47,7 +47,7 @@ const branches = [
     TenChiNhanh: "Thanh Xuân",
     DiaChi: "303 Đường F, Thanh Xuân, Hà Nội",
     SoDienThoai: "0444444444",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 6,
   },
   {
@@ -55,7 +55,7 @@ const branches = [
     TenChiNhanh: "Long Biên",
     DiaChi: "404 Đường G, Long Biên, Hà Nội",
     SoDienThoai: "0555555555",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 7,
   },
   {
@@ -63,7 +63,7 @@ const branches = [
     TenChiNhanh: "Hà Đông",
     DiaChi: "505 Đường H, Hà Đông, Hà Nội",
     SoDienThoai: "0666666666",
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
     ShardId: 8,
   },
 ];

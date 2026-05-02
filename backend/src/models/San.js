@@ -6,8 +6,8 @@ const SanSchema = new mongoose.Schema(
     GiaTheoGio: { type: Number, required: true },
     TrangThai: {
       type: String,
-      enum: ["hoat_dong", "bao_tri", "ngung"],
-      default: "hoat_dong",
+      enum: ["Hoạt động", "Dừng hoạt động"],
+      default: "Hoạt động",
     },
     MaChiNhanh: { type: String, required: true },
   },

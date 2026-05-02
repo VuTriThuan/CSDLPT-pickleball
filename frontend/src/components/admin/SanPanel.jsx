@@ -288,7 +288,7 @@ export default function SanPanel({ auth, setToast }) {
                       </select>
                     ) : (
                       <span
-                        className={`status-badge status-badge--${san.TrangThai}`}
+                        className={`status-badge status-badge--${san.TrangThai === 'Hoạt động' ? 'hoat-dong' : 'dung-hoat-dong'}`}
                       >
                         {statusLabel(san.TrangThai)}
                       </span>

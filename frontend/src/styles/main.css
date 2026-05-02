@@ -903,19 +903,13 @@ body {
   white-space: nowrap;
 }
 
-.status-badge--hoat_dong {
+.status-badge--hoat-dong {
   border-color: #bbf7d0;
   background: #dcfce7;
   color: #15803d;
 }
 
-.status-badge--bao_tri {
-  border-color: #fde68a;
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-badge--ngung {
+.status-badge--dung-hoat-dong {
   border-color: #fecaca;
   background: #fee2e2;
   color: #b91c1c;

@@ -86,6 +86,10 @@ export default function NhanVienPanel({ auth, setToast }) {
         payload.MaChiNhanh = auth.branchId;
       }
 
+      if (action === "update" && !payload.MatKhau) {
+        delete payload.MatKhau;
+      }
+
       if (action === "create") {
         if (!payload.MatKhau) throw new Error("Vui lòng nhập mật khẩu");
         await createNhanVien(payload);

@@ -5,6 +5,7 @@ const { requireAuth, requirePermission, isSystemManager } = require("../middlewa
 const { PERMISSIONS, ROLES } = require("../constants/roles");
 const { assertCanManageNhanVien } = require("../services/phanQuyenService");
 const { v4: uuidv4 } = require("uuid");
+const bcrypt = require("bcryptjs");
 
 const sendError = (res, err, defaultStatus = 500) =>
   res.status(err.statusCode || defaultStatus).json({
@@ -77,9 +78,16 @@ router.put("/:maNhanVien", requireAuth, requirePermission(PERMISSIONS.NHAN_VIEN_
       assertCanManageNhanVien(req.user, targetChiNhanh, targetChucVu);
     }
 
+    const updateData = { ...req.body };
+    if (!updateData.MatKhau) {
+      delete updateData.MatKhau;
+    } else {
+      updateData.MatKhau = await bcrypt.hash(updateData.MatKhau, 10);
+    }
+
     const updated = await NhanVien.findOneAndUpdate(
       { MaNhanVien: req.params.maNhanVien },
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 

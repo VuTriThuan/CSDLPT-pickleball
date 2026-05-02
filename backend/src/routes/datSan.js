@@ -389,7 +389,7 @@ router.put(
           MaLichHen: { $ne: req.params.maLichHen },
           MaSan: nextMaSan,
           NgayDat: { $gte: ngay, $lt: next },
-          TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
+          TrangThai: "Chờ xác nhận",
           $or: [
             {
               GioBatDau: { $lt: nextGioKetThuc },

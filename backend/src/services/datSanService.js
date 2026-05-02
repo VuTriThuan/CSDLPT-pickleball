@@ -26,7 +26,7 @@ const kiemTraXungDot = async (
   return LichHen.findOne({
     MaSan: maSan,
     NgayDat: { $gte: ngay, $lt: next },
-    TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
+    TrangThai: "Chờ xác nhận",
     $or: [{ GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } }],
   }).session(session);
 };
@@ -47,7 +47,7 @@ const datSanVaThanhToan = async ({
   try {
     const san = await San.findOne({
       MaSan: maSan,
-      TrangThai: "hoat_dong",
+      TrangThai: "Hoạt động",
     }).session(session);
     if (!san) throw new Error("Sân không tồn tại hoặc đang bảo trì");
 
@@ -79,7 +79,7 @@ const datSanVaThanhToan = async ({
           NgayDat: new Date(ngayDat),
           GioBatDau: gioBatDau,
           GioKetThuc: gioKetThuc,
-          TrangThai: "da_xac_nhan",
+          TrangThai: "Chờ xác nhận",
           ThoiDiemTao: new Date(),
           MaKhachHang: maKhachHang,
           MaSan: maSan,
@@ -131,14 +131,15 @@ const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
     if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
     if (lichHen.MaKhachHang !== maKhachHangYeuCau)
       throw new Error("Không có quyền hủy lịch này");
-    if (lichHen.TrangThai === "da_huy")
+    if (lichHen.TrangThai === "Huỷ") {
       throw new Error("Lịch hẹn đã được hủy trước đó");
-    if (lichHen.TrangThai === "hoan_thanh")
+    }
+    if (lichHen.TrangThai === "Hoàn thành")
       throw new Error("Không thể hủy lịch đã hoàn thành");
 
     await LichHen.updateOne(
       { MaLichHen: maLichHen },
-      { TrangThai: "da_huy" },
+      { TrangThai: "Huỷ" },
       { session },
     );
 
@@ -171,7 +172,7 @@ const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
 
   const sanChinhanh = await San.find({
     MaChiNhanh: maChiNhanh,
-    TrangThai: "hoat_dong",
+    TrangThai: "Hoạt động",
   }).select("MaSan TenSan GiaTheoGio");
 
   const maSanChiNhanh = sanChinhanh.map((s) => s.MaSan);
@@ -183,7 +184,7 @@ const laySanTrong = async (maChiNhanh, ngayDat, gioBatDau, gioKetThuc) => {
   const xungDot = await LichHen.find({
     MaSan: { $in: maSanChiNhanh },
     NgayDat: { $gte: ngay, $lt: next },
-    TrangThai: { $in: ["cho_xac_nhan", "da_xac_nhan"] },
+    TrangThai: "Chờ xác nhận",
     $or: [{ GioBatDau: { $lt: gioKetThuc }, GioKetThuc: { $gt: gioBatDau } }],
   }).select("MaSan");
 

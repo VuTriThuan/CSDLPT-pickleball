@@ -101,7 +101,7 @@ export default function LichSuDatSan() {
               </div>
             </div>
 
-            {["cho_xac_nhan", "da_xac_nhan"].includes(item.TrangThai) && (
+            {item.TrangThai === "Chờ xác nhận" && (
               <div className="lich-card__footer">
                 <button
                   className="btn btn--danger"

@@ -33,16 +33,15 @@ export const ACTIONS = [
 ];
 
 export const TRANG_THAI_SAN = [
-  { value: "hoat_dong", label: "Hoạt động" },
-  { value: "bao_tri", label: "Bảo trì" },
-  { value: "ngung", label: "Ngừng" },
+  { value: "Hoạt động", label: "Hoạt động" },
+  { value: "Dừng hoạt động", label: "Dừng hoạt động" },
 ];
 
 export const initialSan = {
   MaSan: "",
   TenSan: "",
   GiaTheoGio: "",
-  TrangThai: "hoat_dong",
+  TrangThai: "Hoạt động",
   MaChiNhanh: "",
 };
 

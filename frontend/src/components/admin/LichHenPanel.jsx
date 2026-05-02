@@ -56,7 +56,7 @@ export default function LichHenPanel({ auth, setToast }) {
       GioBatDau: lichHen.GioBatDau || "",
       GioKetThuc: lichHen.GioKetThuc || "",
       GioKetThuc: lichHen.GioKetThuc || "",
-      TrangThai: lichHen.TrangThai || "cho_xac_nhan",
+      TrangThai: lichHen.TrangThai || "Chờ xác nhận",
     });
   };
 
@@ -219,10 +219,9 @@ export default function LichHenPanel({ auth, setToast }) {
                       }
                       disabled={loading}
                     >
-                      <option value="cho_xac_nhan">Chờ xác nhận</option>
-                      <option value="da_xac_nhan">Đã xác nhận</option>
-                      <option value="da_huy">Đã hủy</option>
-                      <option value="hoan_thanh">Hoàn thành</option>
+                      <option value="Chờ xác nhận">Chờ xác nhận</option>
+                      <option value="Hoàn thành">Hoàn thành</option>
+                      <option value="Huỷ">Hủy</option>
                     </select>
                   </td>
                   <td>

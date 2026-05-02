@@ -4,7 +4,7 @@ const getPendingAppointmentsByBranch = async (branchId) => {
   return await LichHen.aggregate([
     {
       $match: {
-        TrangThai: "cho_xac_nhan",
+        TrangThai: "Chờ xác nhận",
       },
     },
 

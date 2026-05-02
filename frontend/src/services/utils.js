@@ -16,20 +16,20 @@ export const PHUONG_THUC = [
 ];
 
 export const TRANG_THAI_COLOR = {
-  cho_xac_nhan: "#f59e0b",
-  da_xac_nhan: "#10b981",
-  da_huy: "#ef4444",
-  hoan_thanh: "#6366f1",
+  "Chờ xác nhận": "#f59e0b",
+  cho_xu_ly: "#f59e0b",
+  "Huỷ": "#ef4444",
+  "Hoàn thành": "#6366f1",
   thanh_cong: "#10b981",
   hoan_tien: "#8b5cf6",
   that_bai: "#ef4444",
 };
 
 export const TRANG_THAI_LABEL = {
-  cho_xac_nhan: "Chờ xác nhận",
-  da_xac_nhan: "Đã xác nhận",
-  da_huy: "Đã hủy",
-  hoan_thanh: "Hoàn thành",
+  "Chờ xác nhận": "Chờ xác nhận",
+  cho_xu_ly: "Chờ xử lý",
+  "Huỷ": "Hủy",
+  "Hoàn thành": "Hoàn thành",
   thanh_cong: "Thành công",
   hoan_tien: "Hoàn tiền",
   that_bai: "Thất bại",

@@ -5,7 +5,7 @@ const ChiNhanh = require("../models/ChiNhanh");
 
 router.get("/chi-nhanh", async (req, res) => {
   try {
-    const list = await ChiNhanh.find({ TrangThai: "hoat_dong" }).sort(
+    const list = await ChiNhanh.find({ TrangThai: "Hoạt động" }).sort(
       "MaChiNhanh",
     );
     res.json({ success: true, data: list });
