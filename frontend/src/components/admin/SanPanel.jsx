@@ -16,6 +16,10 @@ export default function SanPanel({ auth, setToast }) {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(initialSan);
   const [loading, setLoading] = useState(false);
+  const initialSanForAuth = {
+    ...initialSan,
+    MaChiNhanh: auth.branchId || "",
+  };
 
   const canManage =
     auth.role === "admin" ||
@@ -37,6 +41,13 @@ export default function SanPanel({ auth, setToast }) {
   useEffect(() => {
     loadSan();
   }, [auth.role, auth.branchId]);
+
+  useEffect(() => {
+    if (!auth.branchId) return;
+
+    setNewForm((current) => ({ ...current, MaChiNhanh: auth.branchId }));
+    setEditForm((current) => ({ ...current, MaChiNhanh: auth.branchId }));
+  }, [auth.branchId]);
 
   const setEdit = (key, value) =>
     setEditForm((current) => ({ ...current, [key]: value }));
@@ -62,7 +73,7 @@ export default function SanPanel({ auth, setToast }) {
         auth,
       );
       setSanList((current) => [res.data, ...current]);
-      setNewForm(initialSan);
+      setNewForm(initialSanForAuth);
       setShowForm(false);
       setToast({ type: "ok", msg: "Đã thêm sân" });
     } catch (err) {
@@ -123,8 +134,17 @@ export default function SanPanel({ auth, setToast }) {
     }
   };
 
+  const normalizeStatus = (status) => {
+    if (["Hoạt động", "hoat_dong", "hoat-dong", "active"].includes(status)) {
+      return "Hoạt động";
+    }
+
+    return "Dừng hoạt động";
+  };
+
   const statusLabel = (status) =>
-    TRANG_THAI_SAN.find((item) => item.value === status)?.label || status;
+    TRANG_THAI_SAN.find((item) => item.value === normalizeStatus(status))
+      ?.label || normalizeStatus(status);
 
   return (
     <div className="admin-panel">
@@ -193,7 +213,10 @@ export default function SanPanel({ auth, setToast }) {
               <label className="form-label">Chi nhánh</label>
               <BranchSelect
                 value={newForm.MaChiNhanh}
-                onChange={(e) => setNew("MaChiNhanh", e.target.value)}
+                onChange={(e) =>
+                  setNew("MaChiNhanh", auth.branchId || e.target.value)
+                }
+                mode="select"
               />
             </div>
           </div>
@@ -209,7 +232,7 @@ export default function SanPanel({ auth, setToast }) {
               className="btn btn--secondary"
               onClick={() => {
                 setShowForm(false);
-                setNewForm(initialSan);
+                setNewForm(initialSanForAuth);
               }}
               disabled={loading}
             >
@@ -253,7 +276,9 @@ export default function SanPanel({ auth, setToast }) {
                     {isEditing ? (
                       <BranchSelect
                         value={editForm.MaChiNhanh}
-                        onChange={(e) => setEdit("MaChiNhanh", e.target.value)}
+                        onChange={(e) =>
+                          setEdit("MaChiNhanh", auth.branchId || e.target.value)
+                        }
                         mode="select"
                       />
                     ) : (
@@ -288,7 +313,11 @@ export default function SanPanel({ auth, setToast }) {
                       </select>
                     ) : (
                       <span
-                        className={`status-badge status-badge--${san.TrangThai === 'Hoạt động' ? 'hoat-dong' : 'dung-hoat-dong'}`}
+                        className={`status-badge status-badge--${
+                          normalizeStatus(san.TrangThai) === "Hoạt động"
+                            ? "hoat-dong"
+                            : "dung-hoat-dong"
+                        }`}
                       >
                         {statusLabel(san.TrangThai)}
                       </span>

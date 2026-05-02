@@ -904,15 +904,21 @@ body {
 }
 
 .status-badge--hoat-dong {
-  border-color: #bbf7d0;
-  background: #dcfce7;
-  color: #15803d;
+  border-color: #15803d;
+  background: #16a34a;
+  color: #ffffff;
 }
 
 .status-badge--dung-hoat-dong {
-  border-color: #fecaca;
-  background: #fee2e2;
-  color: #b91c1c;
+  border-color: #b91c1c;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.status-badge--cho-xac-nhan {
+  border-color: #d97706;
+  background: #f59e0b;
+  color: #ffffff;
 }
 
 .table-empty {

@@ -18,7 +18,7 @@ export const PHUONG_THUC = [
 export const TRANG_THAI_COLOR = {
   "Chờ xác nhận": "#f59e0b",
   cho_xu_ly: "#f59e0b",
-  "Huỷ": "#ef4444",
+  "Hủy": "#ef4444",
   "Hoàn thành": "#6366f1",
   thanh_cong: "#10b981",
   hoan_tien: "#8b5cf6",
@@ -28,7 +28,7 @@ export const TRANG_THAI_COLOR = {
 export const TRANG_THAI_LABEL = {
   "Chờ xác nhận": "Chờ xác nhận",
   cho_xu_ly: "Chờ xử lý",
-  "Huỷ": "Hủy",
+  "Hủy": "Hủy",
   "Hoàn thành": "Hoàn thành",
   thanh_cong: "Thành công",
   hoan_tien: "Hoàn tiền",

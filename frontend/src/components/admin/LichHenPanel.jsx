@@ -17,6 +17,22 @@ const formatDateInput = (value) => {
   return `${year}-${month}-${day}`;
 };
 
+const statusOptions = [
+  { value: "Chờ xác nhận", label: "Chờ xác nhận" },
+  { value: "Hoàn thành", label: "Hoàn thành" },
+  { value: "Hủy", label: "Hủy" },
+];
+
+const statusLabel = (status) =>
+  statusOptions.find((item) => item.value === status || item.label === status)
+    ?.label || status;
+
+const statusClass = (status) => {
+  if (status === "Hoàn thành") return "hoat-dong";
+  if (status === "Hủy") return "dung-hoat-dong";
+  return "cho-xac-nhan";
+};
+
 export default function LichHenPanel({ auth, setToast }) {
   const [lichHenList, setLichHenList] = useState([]);
   const [sanList, setSanList] = useState([]);
@@ -55,7 +71,6 @@ export default function LichHenPanel({ auth, setToast }) {
       NgayDat: formatDateInput(lichHen.NgayDat),
       GioBatDau: lichHen.GioBatDau || "",
       GioKetThuc: lichHen.GioKetThuc || "",
-      GioKetThuc: lichHen.GioKetThuc || "",
       TrangThai: lichHen.TrangThai || "Chờ xác nhận",
     });
   };
@@ -81,23 +96,6 @@ export default function LichHenPanel({ auth, setToast }) {
       );
       setEditingId(null);
       setToast({ type: "ok", msg: "Đã sửa lịch đặt" });
-    } catch (err) {
-      setToast({ type: "error", msg: err.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveStatus = async (maLichHen, TrangThai) => {
-    setLoading(true);
-    try {
-      const res = await updateLichHen(maLichHen, { TrangThai }, auth);
-      setLichHenList((current) =>
-        current.map((item) =>
-          item.MaLichHen === maLichHen ? { ...item, ...res.data } : item,
-        ),
-      );
-      setToast({ type: "ok", msg: "Đã cập nhật lịch đặt" });
     } catch (err) {
       setToast({ type: "error", msg: err.message });
     } finally {
@@ -209,20 +207,30 @@ export default function LichHenPanel({ auth, setToast }) {
                     )}
                   </td>
                   <td>
-                    <select
-                      className="table-input"
-                      value={isEditing ? editForm.TrangThai : item.TrangThai}
-                      onChange={(event) =>
-                        isEditing
-                          ? setEdit("TrangThai", event.target.value)
-                          : saveStatus(item.MaLichHen, event.target.value)
-                      }
-                      disabled={loading}
-                    >
-                      <option value="Chờ xác nhận">Chờ xác nhận</option>
-                      <option value="Hoàn thành">Hoàn thành</option>
-                      <option value="Huỷ">Hủy</option>
-                    </select>
+                    {isEditing ? (
+                      <select
+                        className="table-input"
+                        value={editForm.TrangThai}
+                        onChange={(event) =>
+                          setEdit("TrangThai", event.target.value)
+                        }
+                        disabled={loading}
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status.value} value={status.value}>
+                            {status.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span
+                        className={`status-badge status-badge--${statusClass(
+                          item.TrangThai,
+                        )}`}
+                      >
+                        {statusLabel(item.TrangThai)}
+                      </span>
+                    )}
                   </td>
                   <td>
                     {isEditing ? (

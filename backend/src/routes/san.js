@@ -9,11 +9,19 @@ const { laySanTrong } = require("../services/datSanService");
 
 const San = require("../models/San");
 
-const sendError = (res, err, defaultStatus = 500) =>
-  res.status(err.statusCode || defaultStatus).json({
+const sendError = (res, err, defaultStatus = 500) => {
+  if (err.code === 11000 && err.keyPattern?.MaSan) {
+    return res.status(400).json({
+      success: false,
+      message: `Mã sân ${err.keyValue?.MaSan || ""} đã tồn tại`,
+    });
+  }
+
+  return res.status(err.statusCode || defaultStatus).json({
     success: false,
     message: err.message,
   });
+};
 
 router.get("/", async (_req, res) => {
   try {

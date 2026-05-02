@@ -19,6 +19,9 @@ router.get("/", requireAuth, requirePermission(PERMISSIONS.NHAN_VIEN_MANAGE), as
     // Nếu là quản lý chi nhánh thì chỉ xem được nhân viên của chi nhánh mình
     if (!isSystemManager(req.user)) {
       filter.MaChiNhanh = req.user.MaChiNhanh;
+      filter.ChucVu = {
+        $in: [ROLES.NHAN_VIEN_CHI_NHANH, ROLES.QUAN_LY_CHI_NHANH],
+      };
     }
     
     // Nếu có query branchId (dành cho QLHT lọc)
