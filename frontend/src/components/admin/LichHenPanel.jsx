@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   getLichHenList,
   updateLichHen,
+  deleteLichHen,
 } from "../../services/adminService";
 import { formatPrice } from "../../utils/helpers";
 
@@ -62,6 +63,20 @@ export default function LichHenPanel({ auth, setToast }) {
     }
   };
 
+  const handleDelete = async (maLichHen) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xoá lịch hẹn này không?")) return;
+    setLoading(true);
+    try {
+      await deleteLichHen(maLichHen, auth);
+      setLichHenList((current) => current.filter((item) => item.MaLichHen !== maLichHen));
+      setToast({ type: "ok", msg: "Đã xoá lịch hẹn thành công" });
+    } catch (err) {
+      setToast({ type: "error", msg: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="admin-panel">
       <div className="admin-toolbar">
@@ -82,6 +97,7 @@ export default function LichHenPanel({ auth, setToast }) {
               <th>Giờ</th>
               <th>Thanh toán</th>
               <th>Trạng thái</th>
+              <th className="action-col">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -128,6 +144,16 @@ export default function LichHenPanel({ auth, setToast }) {
                     <option value="da_huy">Đã hủy</option>
                     <option value="hoan_thanh">Hoàn thành</option>
                   </select>
+                </td>
+                <td className="action-col">
+                  <button
+                    className="btn-icon btn-icon--danger"
+                    onClick={() => handleDelete(item.MaLichHen)}
+                    disabled={loading}
+                    title="Xóa lịch hẹn"
+                  >
+                    🗑️
+                  </button>
                 </td>
               </tr>
             ))}

@@ -7,16 +7,24 @@ export const ADMIN_TABS = [
   { key: "lich", label: "Lịch đặt" },
   { key: "san", label: "Quản lý sân" },
   { key: "khach", label: "Khách hàng" },
-  { key: "thanh-toan", label: "Thanh Toán" },
   { key: "doanhthu", label: "Doanh thu" },
+  { key: "nhan-vien", label: "Nhân viên" },
 ];
 
 export const ROLE_LABELS = {
   user: "Khách hàng",
   admin: "Quản lý hệ thống",
+  quan_ly_he_thong: "Quản lý hệ thống",
+  quan_ly_chi_nhanh: "Quản lý chi nhánh",
+  nhan_vien_chi_nhanh: "Nhân viên chi nhánh",
 };
 
-export const MANAGE_ROLES = ["admin"];
+export const MANAGE_ROLES = [
+  "admin",
+  "quan_ly_he_thong",
+  "quan_ly_chi_nhanh",
+  "nhan_vien_chi_nhanh",
+];
 
 export const ACTIONS = [
   { key: "create", label: "Thêm" },

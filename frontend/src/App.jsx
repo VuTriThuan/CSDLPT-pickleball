@@ -5,12 +5,12 @@ import FormDatSan from "./components/FormDatSan";
 import LichSuDatSan from "./components/LichSuDatSan";
 import ModalBill from "./components/ModalBill";
 import BranchSelect from "./components/BranchSelect";
-import ThanhToanPanel from "./components/ThanhToanPanel";
 
 import SanPanel from "./components/admin/SanPanel";
 import LichHenPanel from "./components/admin/LichHenPanel";
 import KhachHangPanel from "./components/admin/KhachHangPanel";
 import RevenuePanel from "./components/admin/RevenuePanel";
+import NhanVienPanel from "./components/admin/NhanVienPanel";
 
 import { useAuth } from "./context/AuthContext";
 import { ROLE_LABELS, MANAGE_ROLES } from "./utils/constants";
@@ -102,7 +102,7 @@ export default function App() {
             ))}
           </nav>
 
-          {isManagementRole && manageTab !== "khach" && (
+          {isManagementRole && manageTab !== "khach" && (user?.role === "admin" || user?.role === "quan_ly_he_thong") && (
             <div
               className="form-grid"
               style={{ gap: "16px", margin: "16px 0" }}
@@ -135,15 +135,11 @@ export default function App() {
             {isManagementRole && manageTab === "khach" && (
               <KhachHangPanel auth={adminAuth} setToast={setToast} />
             )}
-            {isManagementRole && manageTab === "thanh-toan" && (
-              <ThanhToanPanel
-                auth={adminAuth}
-                setToast={setToast}
-                selectedBranch={selectedBranch}
-              />
-            )}
             {isManagementRole && manageTab === "doanhthu" && (
               <RevenuePanel auth={adminAuth} setToast={setToast} />
+            )}
+            {isManagementRole && manageTab === "nhan-vien" && (
+              <NhanVienPanel auth={adminAuth} setToast={setToast} />
             )}
           </div>
         </div>

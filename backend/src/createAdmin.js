@@ -1,37 +1,37 @@
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 
-const KhachHang = require("./models/KhachHang");
+// const KhachHang = require("./models/KhachHang");
 
-mongoose.connect("mongodb://127.0.0.1:27017/pickleball_db");
+// mongoose.connect("mongodb://127.0.0.1:27017/pickleball_db");
 
-const createAdmin = async () => {
-  try {
-    const admin = new KhachHang({
-      MaKhachHang: "ADMIN001",
+// const createAdmin = async () => {
+//   try {
+//     const admin = new KhachHang({
+//       MaKhachHang: "ADMIN001",
 
-      HoTen: "Admin He Thong",
+//       HoTen: "Admin He Thong",
 
-      SoDienThoai: "0999999999",
+//       SoDienThoai: "0999999999",
 
-      Email: "admin@gmail.com",
+//       Email: "admin@gmail.com",
 
-      MatKhau: "123456",
+//       MatKhau: "123456",
 
-      Role: "admin",
+//       Role: "admin",
 
-      MaChiNhanh: "HOAN_KIEM",
-    });
+//       MaChiNhanh: "HOAN_KIEM",
+//     });
 
-    await admin.save();
+//     await admin.save();
 
-    console.log("Tạo admin thành công");
+//     console.log("Tạo admin thành công");
 
-    process.exit();
-  } catch (error) {
-    console.log(error);
+//     process.exit();
+//   } catch (error) {
+//     console.log(error);
 
-    process.exit();
-  }
-};
+//     process.exit();
+//   }
+// };
 
-createAdmin();
+// createAdmin();

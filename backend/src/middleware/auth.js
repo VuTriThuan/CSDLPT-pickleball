@@ -51,7 +51,9 @@ const requireAdmin = (req, res, next) => {
 
 const hasRole = (user, role) => user?.role === role;
 const isSystemManager = (user) => hasRole(user, ROLES.ADMIN);
-const isBranchUser = () => false;
+const isBranchUser = (user) =>
+  hasRole(user, ROLES.NHAN_VIEN_CHI_NHANH) ||
+  hasRole(user, ROLES.QUAN_LY_CHI_NHANH);
 
 const requirePermission =
   (...permissions) =>
@@ -74,7 +76,6 @@ const requirePermission =
     next();
   };
 const authenticateDemoUser = (req, res, next) => {
-  // ví dụ: gán user demo
   if (!req.session.user) {
     req.session.user = {
       role: "user",

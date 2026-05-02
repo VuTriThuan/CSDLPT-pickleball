@@ -58,6 +58,14 @@ const branches = [
     TrangThai: "hoat_dong",
     ShardId: 7,
   },
+  {
+    MaChiNhanh: "HA_DONG",
+    TenChiNhanh: "Hà Đông",
+    DiaChi: "505 Đường H, Hà Đông, Hà Nội",
+    SoDienThoai: "0666666666",
+    TrangThai: "hoat_dong",
+    ShardId: 8,
+  },
 ];
 
 async function insertBranches() {

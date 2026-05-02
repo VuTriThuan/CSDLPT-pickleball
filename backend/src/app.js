@@ -7,14 +7,14 @@ const connectDB = require("./config/database");
 const datSanRoutes = require("./routes/datSan");
 const sanRoutes = require("./routes/san");
 const chiNhanhRoutes = require("./routes/chiNhanh");
-const { authenticateDemoUser } = require("./middleware/auth");
-const authRoutes = require("./routes/auth");
 const { attachUser } = require("./middleware/auth");
+const authRoutes = require("./routes/auth");
 const app = express();
 const khachHangRoutes = require("./routes/khachHang.js");
 const revenueRoutes = require("./routes/revenue");
 const lichHenRoutes = require("./routes/lichHen");
 const thanhToanRoutes = require("./routes/thanhToan");
+const nhanVienRoutes = require("./routes/nhanVien");
 
 app.use(
   cors({
@@ -38,9 +38,7 @@ app.use(
     },
   }),
 );
-
-app.use(authenticateDemoUser);
-
+// app.use(authenticateDemoUser);
 connectDB();
 
 app.use(attachUser);
@@ -52,6 +50,7 @@ app.use("/api/san", khachHangRoutes);
 app.use("/api/revenue", revenueRoutes);
 app.use("/api/lich-hen", lichHenRoutes);
 app.use("/api/thanh-toan", thanhToanRoutes);
+app.use("/api/nhan-vien", nhanVienRoutes);
 
 app.get("/health", (req, res) => {
   res.json({

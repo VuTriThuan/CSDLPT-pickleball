@@ -15,6 +15,8 @@ const { requireAuth, requirePermission } = require("../middleware/auth");
 const {
   assertCanManageSan,
   assertCanManageKhachHang,
+  assertCanAddLichHen,
+  assertCanEditOrDeleteLichHen,
 } = require("../services/phanQuyenService");
 
 const sendError = (res, err, defaultStatus = 500) =>
@@ -36,8 +38,12 @@ const cleanPayload = (payload) =>
     ),
   );
 
-const getSelectedBranchId = (req) =>
-  req.query.branchId || req.get("x-branch-id") || "";
+const getSelectedBranchId = (req) => {
+  if (req.user && req.user.role !== "admin" && req.user.role !== "quan_ly_he_thong") {
+    return req.user.MaChiNhanh;
+  }
+  return req.query.branchId || req.get("x-branch-id") || "";
+};
 
 const normalizeSanPayload = (body) =>
   cleanPayload({
@@ -170,6 +176,12 @@ router.post("/dat-san", requireAuth, async (req, res) => {
         message:
           "Chưa đăng nhập hoặc phiên làm việc đã hết hạn. Vui lòng đăng nhập lại",
       });
+    }
+    if (req.user && req.user.role !== "user") {
+      const san = await San.findOne({ MaSan: maSan });
+      if (san) {
+        assertCanAddLichHen(req.user, san.MaChiNhanh);
+      }
     }
     const result = await datSanVaThanhToan({
       gioBatDau,
@@ -310,6 +322,9 @@ router.put(
           .json({ success: false, message: "Không tìm thấy lịch hẹn" });
       }
 
+      const san = await San.findOne({ MaSan: lichHen.MaSan });
+      assertCanEditOrDeleteLichHen(req.user, san?.MaChiNhanh);
+
       const lichHenPayload = pickDefined(req.body, ["TrangThai"]);
       const thanhToanPayload = pickDefined(req.body, ["TrangThaiThanhToan"]);
 
@@ -331,6 +346,34 @@ router.put(
       ]);
 
       res.json({ success: true, data: { ...updated.toObject(), thanhToan } });
+    } catch (err) {
+      sendError(res, err, 400);
+    }
+  },
+);
+
+router.delete(
+  "/quan-ly/lich-hen/:maLichHen",
+  requireAuth,
+  requirePermission(PERMISSIONS.LICH_HEN_MANAGE),
+  async (req, res) => {
+    try {
+      const lichHen = await LichHen.findOne({
+        MaLichHen: req.params.maLichHen,
+      });
+      if (!lichHen) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy lịch hẹn" });
+      }
+
+      const san = await San.findOne({ MaSan: lichHen.MaSan });
+      assertCanEditOrDeleteLichHen(req.user, san?.MaChiNhanh);
+
+      await LichHen.deleteOne({ MaLichHen: req.params.maLichHen });
+      await ThanhToan.deleteOne({ MaLichHen: req.params.maLichHen });
+
+      res.json({ success: true, message: "Đã xóa lịch hẹn" });
     } catch (err) {
       sendError(res, err, 400);
     }

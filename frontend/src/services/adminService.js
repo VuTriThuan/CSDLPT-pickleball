@@ -61,6 +61,12 @@ export const updateLichHen = (maLichHen, payload, auth) =>
     body: JSON.stringify(payload),
   });
 
+export const deleteLichHen = (maLichHen, auth) =>
+  requestJson(`${API}/quan-ly/lich-hen/${maLichHen}`, {
+    method: "DELETE",
+    headers: authHeaders(auth),
+  });
+
 export const getKhachHangList = (auth) =>
   requestJson(`${API}/quan-ly/khach-hang`, {
     headers: authHeaders(auth),

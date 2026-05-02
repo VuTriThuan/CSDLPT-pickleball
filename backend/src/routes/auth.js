@@ -29,13 +29,13 @@ router.post("/dang-ky", async (req, res) => {
 // POST /api/auth/dang-nhap
 router.post("/dang-nhap", async (req, res) => {
   try {
-    const { soDienThoai, matKhau } = req.body;
+    const { soDienThoai, matKhau, maChiNhanh } = req.body;
     if (!soDienThoai || !matKhau)
       return res
         .status(400)
-        .json({ success: false, message: "Thiếu email hoặc mật khẩu" });
+        .json({ success: false, message: "Thiếu số điện thoại hoặc mật khẩu" });
 
-    const user = await dangNhap({ soDienThoai, matKhau });
+    const user = await dangNhap({ soDienThoai, matKhau, maChiNhanh });
 
     req.session.user = user;
 
@@ -66,7 +66,10 @@ router.get("/me", async (req, res) => {
 
     const maKhachHang =
       req.session.user.maKhachHang || req.session.user.MaKhachHang;
-    const user = await layNguoiDungTheoMa(maKhachHang);
+    const maNhanVien =
+      req.session.user.maNhanVien || req.session.user.MaNhanVien;
+
+    const user = await layNguoiDungTheoMa({ maKhachHang, maNhanVien });
     req.session.user = user;
 
     res.json({ success: true, data: user });

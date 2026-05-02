@@ -11,4 +11,5 @@ const fetchJSON = async (url, options = {}) => {
   return data.data;
 };
 
+export const getBranchList = () => fetchJSON(`${API}/chi-nhanh`);
 export const getChiNhanhList = () => fetchJSON(`${API}/chi-nhanh`);
