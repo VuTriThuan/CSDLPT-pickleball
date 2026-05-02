@@ -287,9 +287,60 @@ const layLichSuDatSan = async (maKhachHang, page = 1, limit = 10) => {
 
   return { data: result, total, page, limit };
 };
+
+// Admin xóa lịch hẹn và trừ doanh thu (nếu đã thanh toán)
+const xoaLichHenVaTruDoanhThu = async (maLichHen) => {
+  return runWithOptionalTransaction(async (session) => {
+    const lichHen = await findOneMaybeSession(
+      LichHen,
+      { MaLichHen: maLichHen },
+      session,
+    );
+    if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
+
+    // Kiểm tra và xử lý thanh toán
+    const thanhToan = await findOneMaybeSession(
+      ThanhToan,
+      { MaLichHen: maLichHen },
+      session,
+    );
+
+    let soTienTruThue = 0;
+    if (thanhToan && thanhToan.TrangThai === "thanh_cong") {
+      // Nếu đã thanh toán thành công, cập nhật trạng thái thành "hoan_tien"
+      // Điều này sẽ trừ doanh thu vì revenueService chỉ tính những thanh toán "thanh_cong"
+      await updateOneMaybeSession(
+        ThanhToan,
+        { MaLichHen: maLichHen },
+        { TrangThai: "hoan_tien" },
+        session,
+      );
+      soTienTruThue = thanhToan.SoTien;
+    }
+
+    // Xóa lịch hẹn
+    const deleteResult = await LichHen.deleteOne(
+      { MaLichHen: maLichHen },
+      session ? { session } : undefined,
+    );
+
+    if (!deleteResult.deletedCount) {
+      throw new Error("Không thể xóa lịch hẹn");
+    }
+
+    return {
+      success: true,
+      message: "Đã xóa lịch hẹn" + (soTienTruThue > 0 ? " và trừ doanh thu" : ""),
+      soTienTruThue,
+      maThanhToan: thanhToan?.MaThanhToan,
+    };
+  });
+};
+
 module.exports = {
   datSanVaThanhToan,
   huyLichHenVaHoanTien,
   laySanTrong,
   layLichSuDatSan,
+  xoaLichHenVaTruDoanhThu,
 };

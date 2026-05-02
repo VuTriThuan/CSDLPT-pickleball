@@ -5,6 +5,7 @@ const {
   huyLichHenVaHoanTien,
   laySanTrong,
   layLichSuDatSan,
+  xoaLichHenVaTruDoanhThu,
 } = require("../services/datSanService");
 const LichHen = require("../models/LichHen");
 const ThanhToan = require("../models/ThanhToan");
@@ -455,10 +456,10 @@ router.delete(
       const san = await San.findOne({ MaSan: lichHen.MaSan });
       assertCanEditOrDeleteLichHen(req.user, san?.MaChiNhanh);
 
-      await LichHen.deleteOne({ MaLichHen: req.params.maLichHen });
-      await ThanhToan.deleteOne({ MaLichHen: req.params.maLichHen });
+      // Gọi service để xóa lịch hẹn và xử lý doanh thu
+      const result = await xoaLichHenVaTruDoanhThu(req.params.maLichHen);
 
-      res.json({ success: true, message: "Đã xóa lịch hẹn" });
+      res.json(result);
     } catch (err) {
       sendError(res, err, 400);
     }
