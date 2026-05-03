@@ -2,11 +2,17 @@ const API = "http://localhost:5000/api/san";
 const REVENUE_API = "http://localhost:5000/api/revenue";
 const THANH_TOAN_API = "http://localhost:5000/api/thanh-toan";
 
-const authHeaders = (auth = {}) => ({
-  "Content-Type": "application/json",
-  "x-user-role": auth.role,
-  "x-branch-id": auth.branchId,
-});
+const authHeaders = (auth = {}) => {
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (auth.branchId) {
+    headers["x-branch-id"] = auth.branchId;
+  }
+
+  return headers;
+};
 
 const requestJson = async (url, options = {}) => {
   const res = await fetch(url, {
