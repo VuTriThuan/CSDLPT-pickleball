@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
-const MONGO_URI = "mongodb://127.0.0.1:27017/pickleball_db";
+const MONGO_URI = "mongodb://10.251.129.72:27017/pickDB";
+
 
 const connectDB = async () => {
   try {
