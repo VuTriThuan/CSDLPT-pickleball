@@ -418,17 +418,29 @@ router.put(
         ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
       ]);
 
-      // Khi admin chuyển trạng thái sang "Huỷ", cập nhật thanh toán thành "hoan_tien" để trừ doanh thu
-      if (
-        lichHenPayload.TrangThai === "Huỷ" &&
-        lichHen.TrangThai !== "Huỷ" &&
-        thanhToan &&
-        thanhToan.TrangThai === "thanh_cong"
-      ) {
-        await ThanhToan.updateOne(
-          { MaLichHen: req.params.maLichHen },
-          { TrangThai: "hoan_tien" },
-        );
+      // Xử lý cập nhật doanh thu dựa trên thay đổi trạng thái
+      if (lichHenPayload.TrangThai && lichHen.TrangThai !== lichHenPayload.TrangThai && thanhToan) {
+        // Nếu chuyển từ bất kỳ trạng thái nào sang "Huỷ" và thanh toán đang "thanh_cong", trừ doanh thu
+        if (
+          lichHenPayload.TrangThai === "Huỷ" &&
+          thanhToan.TrangThai === "thanh_cong"
+        ) {
+          await ThanhToan.updateOne(
+            { MaLichHen: req.params.maLichHen },
+            { TrangThai: "hoan_tien" },
+          );
+        }
+        // Nếu chuyển từ "Huỷ" sang "Chờ xác nhận" hoặc "Hoàn thành" và thanh toán đang "hoan_tien", cộng lại doanh thu
+        else if (
+          lichHen.TrangThai === "Huỷ" &&
+          (lichHenPayload.TrangThai === "Chờ xác nhận" || lichHenPayload.TrangThai === "Hoàn thành") &&
+          thanhToan.TrangThai === "hoan_tien"
+        ) {
+          await ThanhToan.updateOne(
+            { MaLichHen: req.params.maLichHen },
+            { TrangThai: "thanh_cong" },
+          );
+        }
       }
 
       const [updatedSan, updatedKhachHang] = await Promise.all([
