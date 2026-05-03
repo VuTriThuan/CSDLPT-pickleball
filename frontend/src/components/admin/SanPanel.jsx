@@ -23,8 +23,8 @@ export default function SanPanel({ auth, setToast }) {
 
   const canManage =
     auth.role === "admin" ||
-    auth.role === "quan_ly_he_thong" ||
-    auth.role === "quan_ly_chi_nhanh";
+    auth.role === "Quản lý hệ thống" ||
+    auth.role === "Quản lý chi nhánh";
 
   const loadSan = async () => {
     setLoading(true);

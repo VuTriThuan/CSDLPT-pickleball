@@ -1,13 +1,13 @@
 import { ADMIN_TABS, USER_TABS } from "./constants";
 
 export const tabsForRole = (role) => {
-  if (role === "admin" || role === "quan_ly_he_thong") {
+  if (role === "admin" || role === "Quản lý hệ thống") {
     return ADMIN_TABS;
   }
-  if (role === "quan_ly_chi_nhanh") {
+  if (role === "Quản lý chi nhánh") {
     return ADMIN_TABS.filter((tab) => tab.key !== "khach");
   }
-  if (role === "nhan_vien_chi_nhanh") {
+  if (role === "Nhân viên chi nhánh") {
     return ADMIN_TABS.filter((tab) => tab.key === "lich" || tab.key === "san");
   }
   return USER_TABS;

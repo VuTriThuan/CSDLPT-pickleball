@@ -24,7 +24,7 @@ const seedData = async () => {
     MaNhanVien: "NV005",
     HoTen: "Phạm Thị D",
     SoDienThoai: "0999999999",
-    ChucVu: "quan_ly_he_thong",
+    ChucVu: "Quản lý hệ thống",
     MaChiNhanh: "HA_DONG",
     MatKhau: "123456",
     },);
@@ -37,7 +37,7 @@ const seedData = async () => {
     MaNhanVien: "NV001",
     HoTen: "Nguyễn Văn A",
     SoDienThoai: "0900000001",
-    ChucVu: "quan_ly_chi_nhanh",
+    ChucVu: "Quản lý chi nhánh",
     MaChiNhanh: "HOAN_KIEM",
     MatKhau: "123456",
     },);
@@ -50,7 +50,7 @@ const seedData = async () => {
     MaNhanVien: "NV002",
     HoTen: "Trần Thị B",
     SoDienThoai: "0900000002",
-    ChucVu: "nhan_vien_chi_nhanh",
+    ChucVu: "Nhân viên chi nhánh",
     MaChiNhanh: "HOAN_KIEM",
     MatKhau: "123456",
     },);

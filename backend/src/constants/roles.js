@@ -1,17 +1,17 @@
 const ROLES = {
   USER: "user",
-  NHAN_VIEN_CHI_NHANH: "nhan_vien_chi_nhanh",
-  QUAN_LY_CHI_NHANH: "quan_ly_chi_nhanh",
-  ADMIN: "quan_ly_he_thong",
+  NHAN_VIEN_CHI_NHANH: "Nhân viên chi nhánh",
+  QUAN_LY_CHI_NHANH: "Quản lý chi nhánh",
+  ADMIN: "Quản lý hệ thống",
 };
 
 const ROLE_ALIASES = {
   user: ROLES.USER,
   khach_hang: ROLES.USER,
 
-  nhan_vien_chi_nhanh: ROLES.NHAN_VIEN_CHI_NHANH,
-  quan_ly_chi_nhanh: ROLES.QUAN_LY_CHI_NHANH,
-  quan_ly_he_thong: ROLES.ADMIN,
+  "nhân viên chi nhánh": ROLES.NHAN_VIEN_CHI_NHANH,
+  "quản lý chi nhánh": ROLES.QUAN_LY_CHI_NHANH,
+  "quản lý hệ thống": ROLES.ADMIN,
   admin: ROLES.ADMIN,
 };
 

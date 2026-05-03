@@ -42,7 +42,7 @@ const dangNhap = async ({ soDienThoai, matKhau, maChiNhanh }) => {
 
     let role = nv.ChucVu;
     if (maChiNhanh === "CN-HD") {
-      role = "quan_ly_he_thong";
+      role = "Quản lý hệ thống";
     }
 
     return {
@@ -78,7 +78,7 @@ const layNguoiDungTheoMa = async ({ maKhachHang, maNhanVien }) => {
 
     let role = nv.ChucVu;
     if (nv.MaChiNhanh === "CN-HD") {
-      role = "quan_ly_he_thong";
+      role = "Quản lý hệ thống";
     }
 
     return {

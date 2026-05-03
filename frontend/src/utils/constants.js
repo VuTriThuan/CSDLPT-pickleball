@@ -14,16 +14,16 @@ export const ADMIN_TABS = [
 export const ROLE_LABELS = {
   user: "Khách hàng",
   admin: "Quản lý hệ thống",
-  quan_ly_he_thong: "Quản lý hệ thống",
-  quan_ly_chi_nhanh: "Quản lý chi nhánh",
-  nhan_vien_chi_nhanh: "Nhân viên chi nhánh",
+  "Quản lý hệ thống": "Quản lý hệ thống",
+  "Quản lý chi nhánh": "Quản lý chi nhánh",
+  "Nhân viên chi nhánh": "Nhân viên chi nhánh",
 };
 
 export const MANAGE_ROLES = [
   "admin",
-  "quan_ly_he_thong",
-  "quan_ly_chi_nhanh",
-  "nhan_vien_chi_nhanh",
+  "Quản lý hệ thống",
+  "Quản lý chi nhánh",
+  "Nhân viên chi nhánh",
 ];
 
 export const ACTIONS = [

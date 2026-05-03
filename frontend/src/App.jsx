@@ -106,7 +106,7 @@ export default function App() {
             ))}
           </nav>
 
-          {isManagementRole && manageTab !== "khach" && (user?.role === "admin" || user?.role === "quan_ly_he_thong") && (
+          {isManagementRole && manageTab !== "khach" && (user?.role === "admin" || user?.role === "Quản lý hệ thống") && (
             <div
               className="form-grid"
               style={{ gap: "16px", margin: "16px 0" }}

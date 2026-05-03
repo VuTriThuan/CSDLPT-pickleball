@@ -41,7 +41,7 @@ const deleteNhanVien = (id) =>
 const initialForm = {
   HoTen: "",
   SoDienThoai: "",
-  ChucVu: "nhan_vien_chi_nhanh",
+  ChucVu: "Nhân viên chi nhánh",
   MaChiNhanh: "",
   MatKhau: "",
 };
@@ -53,7 +53,7 @@ export default function NhanVienPanel({ auth, setToast }) {
   const [action, setAction] = useState(null);
   const [form, setForm] = useState(initialForm);
 
-  const isAdmin = auth.role === "admin" || auth.role === "quan_ly_he_thong";
+  const isAdmin = auth.role === "admin" || auth.role === "Quản lý hệ thống";
 
   const loadData = async () => {
     setLoading(true);
@@ -169,9 +169,9 @@ export default function NhanVienPanel({ auth, setToast }) {
                 value={form.ChucVu}
                 onChange={(e) => set("ChucVu", e.target.value)}
               >
-                <option value="nhan_vien_chi_nhanh">Nhân viên chi nhánh</option>
-                <option value="quan_ly_chi_nhanh">Quản lý chi nhánh</option>
-                {isAdmin && <option value="quan_ly_he_thong">Quản lý hệ thống</option>}
+                <option value="Nhân viên chi nhánh">Nhân viên chi nhánh</option>
+                <option value="Quản lý chi nhánh">Quản lý chi nhánh</option>
+                {isAdmin && <option value="Quản lý hệ thống">Quản lý hệ thống</option>}
               </select>
             </div>
             {isAdmin && (
@@ -244,10 +244,10 @@ export default function NhanVienPanel({ auth, setToast }) {
                   <td>{item.HoTen}</td>
                   <td>{item.SoDienThoai}</td>
                   <td>
-                    <span className={`status-badge status-badge--${item.ChucVu}`}>
-                      {item.ChucVu === "quan_ly_he_thong"
+                    <span className="status-badge">
+                      {item.ChucVu === "Quản lý hệ thống"
                         ? "QL Hệ thống"
-                        : item.ChucVu === "quan_ly_chi_nhanh"
+                        : item.ChucVu === "Quản lý chi nhánh"
                         ? "QL Chi nhánh"
                         : "NV Chi nhánh"}
                     </span>

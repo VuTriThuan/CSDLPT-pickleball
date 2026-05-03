@@ -11,7 +11,7 @@ const NhanVienSchema = new mongoose.Schema(
 
     ChucVu: {
       type: String,
-      enum: ["nhan_vien_chi_nhanh", "quan_ly_chi_nhanh", "quan_ly_he_thong"],
+      enum: ["Nhân viên chi nhánh", "Quản lý chi nhánh", "Quản lý hệ thống"],
       required: true,
     },
 

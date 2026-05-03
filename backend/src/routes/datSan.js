@@ -40,7 +40,7 @@ const cleanPayload = (payload) =>
   );
 
 const getSelectedBranchId = (req) => {
-  if (req.user && req.user.role !== "admin" && req.user.role !== "quan_ly_he_thong") {
+  if (req.user && req.user.role !== "admin" && req.user.role !== "Quản lý hệ thống") {
     return req.user.MaChiNhanh;
   }
   return req.query.branchId || req.get("x-branch-id") || "";
