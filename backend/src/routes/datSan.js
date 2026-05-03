@@ -406,6 +406,7 @@ router.put(
         }
       }
 
+      // Cập nhật lịch hẹn
       const [updated, thanhToan] = await Promise.all([
         Object.keys(lichHenPayload).length
           ? LichHen.findOneAndUpdate(
@@ -416,6 +417,19 @@ router.put(
           : Promise.resolve(lichHen),
         ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
       ]);
+
+      // Khi admin chuyển trạng thái sang "Hủy", cập nhật thanh toán thành "hoan_tien" để trừ doanh thu
+      if (
+        lichHenPayload.TrangThai === "Hủy" &&
+        lichHen.TrangThai !== "Hủy" &&
+        thanhToan &&
+        thanhToan.TrangThai === "thanh_cong"
+      ) {
+        await ThanhToan.updateOne(
+          { MaLichHen: req.params.maLichHen },
+          { TrangThai: "hoan_tien" },
+        );
+      }
 
       const [updatedSan, updatedKhachHang] = await Promise.all([
         San.findOne({ MaSan: updated.MaSan }),

@@ -15,6 +15,7 @@ const seedData = async () => {
     await LichHen.deleteMany({});
     await San.deleteMany({});
     await KhachHang.deleteMany({});
+    await NhanVien.deleteMany({});
 
     console.log("🗑️ Đã xóa dữ liệu cũ (KhachHang, San, LichHen, ThanhToan)");
 
@@ -22,7 +23,7 @@ const seedData = async () => {
     NhanVien({
     MaNhanVien: "NV005",
     HoTen: "Phạm Thị D",
-    SoDienThoai: "0999999998",
+    SoDienThoai: "0999999999",
     ChucVu: "quan_ly_he_thong",
     MaChiNhanh: "HA_DONG",
     MatKhau: "123456",
@@ -31,6 +32,32 @@ const seedData = async () => {
     await admin.save();
 
     console.log("✅ Đã tạo tài khoản admin toàn hệ thống");
+
+    const quanlychinhanh = new NhanVien({
+    MaNhanVien: "NV001",
+    HoTen: "Nguyễn Văn A",
+    SoDienThoai: "0900000001",
+    ChucVu: "quan_ly_chi_nhanh",
+    MaChiNhanh: "HOAN_KIEM",
+    MatKhau: "123456",
+    },);
+
+    await quanlychinhanh.save();
+
+    console.log("✅ Đã tạo tài khoản quản lý chi nhánh Hoàn Kiếm");
+
+    const nhanvienchinhanh = new NhanVien({
+    MaNhanVien: "NV002",
+    HoTen: "Trần Thị B",
+    SoDienThoai: "0900000002",
+    ChucVu: "nhan_vien_chi_nhanh",
+    MaChiNhanh: "HOAN_KIEM",
+    MatKhau: "123456",
+    },);
+
+    await nhanvienchinhanh.save();
+
+    console.log("✅ Đã tạo tài khoản nhân viên chi nhánh Hoàn Kiếm"); 
 
 
 
