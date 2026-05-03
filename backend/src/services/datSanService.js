@@ -116,8 +116,15 @@ const datSanVaThanhToan = async ({
     );
     if (xungDot) throw new Error("Sân đã được đặt trong khung giờ này");
 
-    const soGio = tinhSoGio(gioBatDau, gioKetThuc);
-    if (soGio <= 0) throw new Error("Khung giờ không hợp lệ");
+    const [h1, m1] = gioBatDau.split(":").map(Number);
+    const [h2, m2] = gioKetThuc.split(":").map(Number);
+
+    if (
+      [h1, m1, h2, m2].some((v) => Number.isNaN(v)) ||
+      h2 * 60 + m2 <= h1 * 60 + m1
+    ) {
+      throw new Error("Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
+    }
     const soTien = soGio * san.GiaTheoGio;
 
     const maLichHen = "LH-" + uuidv4().slice(0, 8).toUpperCase();
@@ -330,7 +337,8 @@ const xoaLichHenVaTruDoanhThu = async (maLichHen) => {
 
     return {
       success: true,
-      message: "Đã xóa lịch hẹn" + (soTienTruThue > 0 ? " và trừ doanh thu" : ""),
+      message:
+        "Đã xóa lịch hẹn" + (soTienTruThue > 0 ? " và trừ doanh thu" : ""),
       soTienTruThue,
       maThanhToan: thanhToan?.MaThanhToan,
     };
