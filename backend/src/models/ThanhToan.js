@@ -10,7 +10,7 @@ const ThanhToanSchema = new mongoose.Schema(
       default: "thanh_cong",
     },
 
-    MaDatSan: { type: String, required: true },
+    MaLichHen: { type: String, required: true },
   },
   { timestamps: true },
 );

@@ -287,7 +287,7 @@ router.get(
         lichHen.map(async (item) => {
           const [khachHang, thanhToan] = await Promise.all([
             KhachHang.findOne({ MaKhachHang: item.MaKhachHang }),
-            ThanhToan.findOne({ MaDatSan: item.MaLichHen }),
+            ThanhToan.findOne({ MaLichHen: item.MaLichHen }),
           ]);
           const san = sanById.get(item.MaSan);
 
@@ -415,7 +415,7 @@ router.put(
               { new: true, runValidators: true },
             )
           : Promise.resolve(lichHen),
-        ThanhToan.findOne({ MaDatSan: req.params.maLichHen }),
+        ThanhToan.findOne({ MaLichHen: req.params.maLichHen }),
       ]);
 
       // Khi admin chuyển trạng thái sang "Huỷ", cập nhật thanh toán thành "hoan_tien" để trừ doanh thu
@@ -426,7 +426,7 @@ router.put(
         thanhToan.TrangThai === "thanh_cong"
       ) {
         await ThanhToan.updateOne(
-          { MaDatSan: req.params.maLichHen },
+          { MaLichHen: req.params.maLichHen },
           { TrangThai: "hoan_tien" },
         );
       }
@@ -491,7 +491,7 @@ router.get("/lich-hen/:maLichHen", async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy lịch hẹn" });
-    const thanhToan = await ThanhToan.findOne({ MaDatSan: lichHen.MaLichHen });
+    const thanhToan = await ThanhToan.findOne({ MaLichHen: lichHen.MaLichHen });
     res.json({ success: true, data: { ...lichHen.toObject(), thanhToan } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

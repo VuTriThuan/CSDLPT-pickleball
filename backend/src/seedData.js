@@ -167,19 +167,19 @@ const seedData = async () => {
         MaThanhToan: "TT001",
         SoTien: 600000,
         TrangThai: "thanh_cong",
-        MaDatSan: "LH001",
+        MaLichHen: "LH001",
       },
       {
         MaThanhToan: "TT002",
         SoTien: 500000,
         TrangThai: "thanh_cong",
-        MaDatSan: "LH002",
+        MaLichHen: "LH002",
       },
       {
         MaThanhToan: "TT003",
         SoTien: 600000,
         TrangThai: "thanh_cong",
-        MaDatSan: "LH003",
+        MaLichHen: "LH003",
       },
     ]);
 
