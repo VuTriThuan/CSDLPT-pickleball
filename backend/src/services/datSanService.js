@@ -180,7 +180,7 @@ const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
     if (!lichHen) throw new Error("Lịch hẹn không tồn tại");
     if (lichHen.MaKhachHang !== maKhachHangYeuCau)
       throw new Error("Không có quyền hủy lịch này");
-    if (lichHen.TrangThai === "Hủy") {
+    if (lichHen.TrangThai === "Huỷ") {
       throw new Error("Lịch hẹn đã được hủy trước đó");
     }
     if (lichHen.TrangThai === "Hoàn thành")
@@ -189,7 +189,7 @@ const huyLichHenVaHoanTien = async (maLichHen, maKhachHangYeuCau) => {
     await updateOneMaybeSession(
       LichHen,
       { MaLichHen: maLichHen },
-      { TrangThai: "Hủy" },
+      { TrangThai: "Huỷ" },
       session,
     );
 

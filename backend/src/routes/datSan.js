@@ -418,10 +418,10 @@ router.put(
         ThanhToan.findOne({ MaDatSan: req.params.maLichHen }),
       ]);
 
-      // Khi admin chuyển trạng thái sang "Hủy", cập nhật thanh toán thành "hoan_tien" để trừ doanh thu
+      // Khi admin chuyển trạng thái sang "Huỷ", cập nhật thanh toán thành "hoan_tien" để trừ doanh thu
       if (
-        lichHenPayload.TrangThai === "Hủy" &&
-        lichHen.TrangThai !== "Hủy" &&
+        lichHenPayload.TrangThai === "Huỷ" &&
+        lichHen.TrangThai !== "Huỷ" &&
         thanhToan &&
         thanhToan.TrangThai === "thanh_cong"
       ) {

@@ -20,7 +20,7 @@ const formatDateInput = (value) => {
 const statusOptions = [
   { value: "Chờ xác nhận", label: "Chờ xác nhận" },
   { value: "Hoàn thành", label: "Hoàn thành" },
-  { value: "Hủy", label: "Hủy" },
+  { value: "Huỷ", label: "Huỷ" },
 ];
 
 const statusLabel = (status) =>
@@ -29,7 +29,7 @@ const statusLabel = (status) =>
 
 const statusClass = (status) => {
   if (status === "Hoàn thành") return "hoat-dong";
-  if (status === "Hủy") return "dung-hoat-dong";
+  if (status === "Huỷ") return "dung-hoat-dong";
   return "cho-xac-nhan";
 };
 
