@@ -17,7 +17,7 @@ const sendError = (res, err, defaultStatus = 500) =>
 const enrichThanhToanData = async (thanhToanList) => {
   return Promise.all(
     thanhToanList.map(async (tt) => {
-      const lichHen = await LichHen.findOne({ MaLichHen: tt.MaLichHen });
+      const lichHen = await LichHen.findOne({ MaLichHen: tt.MaDatSan });
       const khachHang = lichHen
         ? await KhachHang.findOne({ MaKhachHang: lichHen.MaKhachHang })
         : null;
@@ -51,7 +51,7 @@ router.get("/", async (req, res) => {
       const maLichHenList = filtered.map((item) => item.MaLichHen);
 
       thanhToanList = await ThanhToan.find({
-        MaLichHen: { $in: maLichHenList },
+        MaDatSan: { $in: maLichHenList },
       });
     } else {
       thanhToanList = await ThanhToan.find();

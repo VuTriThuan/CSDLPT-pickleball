@@ -19,7 +19,7 @@ const initialForm = {
   MaThanhToan: "",
   SoTien: "",
   TrangThai: "thanh_cong",
-  MaLichHen: "",
+  MaDatSan: "",
 };
 
 const formatPrice = (value) =>
@@ -75,7 +75,7 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
     setEditForm((current) => ({ ...current, [key]: value }));
 
   const addThanhToan = async () => {
-    if (!newForm.MaThanhToan || !newForm.SoTien || !newForm.MaLichHen) {
+    if (!newForm.MaThanhToan || !newForm.SoTien || !newForm.MaDatSan) {
       setToast({ type: "error", msg: "Cần nhập đầy đủ thông tin thanh toán" });
       return;
     }
@@ -103,7 +103,7 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
       MaThanhToan: thanhToan.MaThanhToan,
       SoTien: thanhToan.SoTien,
       TrangThai: thanhToan.TrangThai,
-      MaLichHen: thanhToan.MaLichHen,
+      MaDatSan: thanhToan.MaDatSan,
     });
   };
 
@@ -115,7 +115,7 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
         {
           SoTien: editForm.SoTien ? Number(editForm.SoTien) : "",
           TrangThai: editForm.TrangThai,
-          MaLichHen: editForm.MaLichHen,
+          MaDatSan: editForm.MaDatSan,
         },
         auth,
       );
@@ -154,8 +154,8 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
     TRANG_THAI_THANH_TOAN.find((item) => item.value === status)?.label ||
     status;
 
-  const getLichHenInfo = (maLichHen) =>
-    lichHenList.find((item) => item.MaLichHen === maLichHen);
+  const getLichHenInfo = (maDatSan) =>
+    lichHenList.find((item) => item.MaLichHen === maDatSan);
 
   return (
     <div className="admin-panel">
@@ -217,8 +217,8 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
               <label className="form-label">Lịch hẹn</label>
               <select
                 className="form-input"
-                value={newForm.MaLichHen}
-                onChange={(e) => setNew("MaLichHen", e.target.value)}
+                value={newForm.MaDatSan}
+                onChange={(e) => setNew("MaDatSan", e.target.value)}
               >
                 <option value="">-- Chọn lịch hẹn --</option>
                 {lichHenList.map((item) => (
@@ -268,7 +268,7 @@ export default function ThanhToanPanel({ auth, setToast, selectedBranch }) {
           <tbody>
             {thanhToanList.map((item) => {
               const isEditing = editingId === item.MaThanhToan;
-              const lichHenInfo = getLichHenInfo(item.MaLichHen);
+              const lichHenInfo = getLichHenInfo(item.MaDatSan);
               return (
                 <tr key={item.MaThanhToan}>
                   <td className="admin-table__id">{item.MaThanhToan}</td>

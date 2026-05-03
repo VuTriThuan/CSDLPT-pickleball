@@ -248,7 +248,7 @@ const layLichSuKhachHang = async (maKhachHang, page = 1, limit = 10) => {
   const data = await Promise.all(
     items.map(async (lh) => {
       const [thanhToan, san] = await Promise.all([
-        ThanhToan.findOne({ MaLichHen: lh.MaLichHen }),
+        ThanhToan.findOne({ MaDatSan: lh.MaLichHen }),
         San.findOne({ MaSan: lh.MaSan }),
       ]);
 
@@ -285,7 +285,7 @@ const layLichSuDatSan = async (maKhachHang, page = 1, limit = 10) => {
 
   const result = await Promise.all(
     lichHens.map(async (lh) => {
-      const thanhToan = await ThanhToan.findOne({ MaLichHen: lh.MaLichHen });
+      const thanhToan = await ThanhToan.findOne({ MaDatSan: lh.MaLichHen });
       const san = await San.findOne({ MaSan: lh.MaSan });
       return { ...lh.toObject(), thanhToan, tenSan: san?.TenSan };
     }),
