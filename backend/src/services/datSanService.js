@@ -116,6 +116,7 @@ const datSanVaThanhToan = async ({
     );
     if (xungDot) throw new Error("Sân đã được đặt trong khung giờ này");
 
+    const soGio = Math.ceil(tinhSoGio(gioBatDau, gioKetThuc));
     const [h1, m1] = gioBatDau.split(":").map(Number);
     const [h2, m2] = gioKetThuc.split(":").map(Number);
 
