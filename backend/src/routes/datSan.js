@@ -362,6 +362,7 @@ router.put(
       const nextGioBatDau = lichHenPayload.GioBatDau || lichHen.GioBatDau;
       const nextGioKetThuc = lichHenPayload.GioKetThuc || lichHen.GioKetThuc;
       const nextMaSan = lichHenPayload.MaSan || lichHen.MaSan;
+      const nextTrangThai = lichHenPayload.TrangThai || lichHen.TrangThai;
       const batDau = nextGioBatDau.split(":").map(Number);
       const ketThuc = nextGioKetThuc.split(":").map(Number);
       if (
@@ -376,12 +377,7 @@ router.put(
           .json({ success: false, message: "Khung giờ không hợp lệ" });
       }
 
-      if (
-        lichHenPayload.MaSan ||
-        lichHenPayload.NgayDat ||
-        lichHenPayload.GioBatDau ||
-        lichHenPayload.GioKetThuc
-      ) {
+      if (nextTrangThai !== "Huỷ") {
         const ngay = new Date(nextNgayDat);
         ngay.setHours(0, 0, 0, 0);
         const next = new Date(ngay);
@@ -390,7 +386,7 @@ router.put(
           MaLichHen: { $ne: req.params.maLichHen },
           MaSan: nextMaSan,
           NgayDat: { $gte: ngay, $lt: next },
-          TrangThai: "Chờ xác nhận",
+          TrangThai: { $ne: "Huỷ" },
           $or: [
             {
               GioBatDau: { $lt: nextGioKetThuc },

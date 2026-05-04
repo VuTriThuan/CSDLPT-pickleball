@@ -33,6 +33,15 @@ const statusClass = (status) => {
   return "cho-xac-nhan";
 };
 
+const timeToMinutes = (value) => {
+  const [hour, minute] = (value || "").split(":").map(Number);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+  return hour * 60 + minute;
+};
+
+const hasTimeOverlap = (startA, endA, startB, endB) =>
+  startA < endB && endA > startB;
+
 export default function LichHenPanel({ auth, setToast }) {
   const [lichHenList, setLichHenList] = useState([]);
   const [sanList, setSanList] = useState([]);
@@ -76,19 +85,58 @@ export default function LichHenPanel({ auth, setToast }) {
   };
 
   const saveEdit = async (maLichHen) => {
+    const payload = cleanPayload({
+      MaSan: editForm.MaSan,
+      NgayDat: editForm.NgayDat,
+      GioBatDau: editForm.GioBatDau,
+      GioKetThuc: editForm.GioKetThuc,
+      TrangThai: editForm.TrangThai,
+    });
+    const startMinutes = timeToMinutes(payload.GioBatDau);
+    const endMinutes = timeToMinutes(payload.GioKetThuc);
+
+    if (
+      startMinutes == null ||
+      endMinutes == null ||
+      endMinutes <= startMinutes
+    ) {
+      setToast({ type: "error", msg: "Khung giờ không hợp lệ" });
+      return;
+    }
+
+    if (payload.TrangThai !== "Huỷ") {
+      const conflict = lichHenList.find((item) => {
+        if (item.MaLichHen === maLichHen || item.TrangThai === "Huỷ") {
+          return false;
+        }
+        const itemStart = timeToMinutes(item.GioBatDau);
+        const itemEnd = timeToMinutes(item.GioKetThuc);
+        if (itemStart == null || itemEnd == null) return false;
+
+        return (
+          item.MaSan === payload.MaSan &&
+          formatDateInput(item.NgayDat) === payload.NgayDat &&
+          hasTimeOverlap(
+            startMinutes,
+            endMinutes,
+            itemStart,
+            itemEnd,
+          )
+        );
+      });
+
+      if (conflict) {
+        setToast({
+          type: "error",
+          msg: "Sân đã được đặt trong khung giờ này",
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      const res = await updateLichHen(
-        maLichHen,
-        cleanPayload({
-          MaSan: editForm.MaSan,
-          NgayDat: editForm.NgayDat,
-          GioBatDau: editForm.GioBatDau,
-          GioKetThuc: editForm.GioKetThuc,
-          TrangThai: editForm.TrangThai,
-        }),
-        auth,
-      );
+      const res = await updateLichHen(maLichHen, payload, auth);
       setLichHenList((current) =>
         current.map((item) =>
           item.MaLichHen === maLichHen ? { ...item, ...res.data } : item,

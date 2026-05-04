@@ -22,11 +22,12 @@ const KhachHangSchema = new mongoose.Schema(
 KhachHangSchema.pre("save", async function () {
   if (!this.isModified("MatKhau")) return;
 
-  this.MatKhau = await bcrypt.hash(this.MatKhau, 10);
+  // this.MatKhau = await bcrypt.hash(this.MatKhau, 10);
 });
 
 KhachHangSchema.methods.kiemTraMatKhau = function (matKhau) {
-  return bcrypt.compare(matKhau, this.MatKhau);
+  // return bcrypt.compare(matKhau, this.MatKhau);
+  return matKhau === this.MatKhau;
 };
 
 module.exports = mongoose.model("KHACH_HANG", KhachHangSchema, "KHACH_HANG");
