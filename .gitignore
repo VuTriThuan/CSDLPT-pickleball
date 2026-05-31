@@ -1,2 +1,34 @@
+# =====================
+# NODEJS
+# =====================
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =====================
+# ENV FILE
+# =====================
 .env
+
+# =====================
+# MONGODB (QUAN TRỌNG)
+# =====================
+database/
+data/
+*.wt
+*.log
+*.lock
+*.ns
+
+# =====================
+# OS FILES
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# BUILD FILES
+# =====================
+dist/
+build/
